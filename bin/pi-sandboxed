@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+PI_BIN="${PI_BIN:-$(command -v pi || true)}"
+
+opt_print=0
+opt_args=()
+opt_profile=
+
+die() {
+    local errcode="$1" msg="$2"
+    echo "$msg" >&2
+    exit "$errcode"
+}
+
+canon() { realpath "$1" 2>/dev/null || printf '%s' "$1"; }
+
+usage() {
+    cat <<'USAGE'
+pi-sandboxed - run pi inside a macOS sandbox-exec profile
+
+Usage:
+  pi-sandboxed [options] [--] [pi-args...]
+
+Options:
+  -h, --help       Show this help and exit.
+      --print      Print the effective sandbox profile to stdout and exit.
+                   Without --profile this is the profile that would be used
+                   for this run; with --profile the given file is printed.
+      --profile F  Use sandbox profile file F instead of generating one.
+  --               Treat every following argument as a pi argument.
+
+Anything not listed above is passed through to pi unchanged.
+
+Environment:
+  PI_BIN               pi executable to run (default: looked up on PATH).
+  PI_CODING_AGENT_DIR  directory allowed for writes (default: ~/.pi/agent).
+  TMPDIR               temp directory allowed for writes (default: /tmp).
+USAGE
+}
+
+generate_profile() {
+    [[ -n "${opt_profile}" ]] && return
+
+    local WORKSPACE="$(canon "$(pwd -P)")"
+    local TMPDIR_CANON="$(canon "${TMPDIR:-/tmp}")"
+    local PI_AGENT_DIR="$(canon "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}")"
+    local HOME_CANON="$(canon "$HOME")"
+
+    opt_profile="$(mktemp "${TMPDIR:-/tmp}/pi-sandbox.XXXXXX")"
+    trap 'rm -f "$opt_profile"' EXIT
+
+    {
+        cat << 'HEADER'
+(version 1)
+
+;; Base: allow all operations by default
+;; Network, process execution, etc. are not additionally restricted.
+(allow default)
+HEADER
+
+        cat <<'READ_DENY'
+
+;; ============================================================
+;; Read: readable by default; deny specific sensitive directories
+;; ============================================================
+READ_DENY
+        for d in .ssh .aws .gnupg Library/Keychains .config/gh; do
+            printf '(deny file-read* (subpath "%s/%s"))\n' "$HOME_CANON" "$d"
+        done
+
+        cat <<WRITE_BASE
+
+;; ============================================================
+;; Write: deny by default, allow specific directories
+;; Global deny first, then allow rules (order matters).
+;; ============================================================
+(deny file-write*)
+(allow file-write* (subpath "$WORKSPACE"))
+(allow file-write* (subpath "$TMPDIR_CANON"))
+(allow file-write* (subpath "$PI_AGENT_DIR"))
+
+(allow file-write* (literal "/dev/null") (literal "/dev/zero") (literal "/dev/dtracehelper"))
+
+(allow file-write* (literal "/dev/ptmx"))
+(allow file-write* (regex #"^/dev/ttys[0-9]+$"))
+WRITE_BASE
+
+    } >"$opt_profile"
+}
+
+main() {
+    while (($#)); do
+        case "$1" in
+            -h|--help) usage; exit 0 ;;
+            --print) opt_print=1; shift ;;
+            --profile)
+                [[ $# -ge 2 ]] || die 2 "pi-sandboxed: --profile requires a path"
+                opt_profile="$2"
+                [[ -r "$opt_profile" ]] || die 2 "pi-sandboxed: unreadable profile: $opt_profile"
+                shift 2 ;;
+            --) shift; opt_args+=("$@"); break ;;
+            *) opt_args+=("$1"); shift ;;
+        esac
+    done
+
+    [[ -n "$PI_BIN" ]] || die 1 "pi-sandboxed: cannot find pi; set PI_BIN or add pi to PATH"
+
+    # --print reports the effective profile for this invocation: the file given
+    # via --profile, or the freshly generated one. It never launches pi.
+    generate_profile
+    [[ "$opt_print" -eq 1 ]] && { cat "$opt_profile"; exit 0; }
+    sandbox-exec -f "$opt_profile" "$PI_BIN" ${opt_args[@]+"${opt_args[@]}"}
+}
+
+main "$@"

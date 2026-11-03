@@ -1,0 +1,55 @@
+{
+  "skill_name": "learning-guide",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Teach me how backpropagation works. I write code for a living but I've never done any machine learning.",
+      "expected_output": "A structured, interactive lesson that offers synchronized notes, sketches a knowledge framework, confirms the goal, probes the learner's boundary, and presents a learning plan before teaching backpropagation.",
+      "files": [],
+      "expectations": [
+        "Asks first whether to keep synchronized notes in an Obsidian vault, via ask_user",
+        "Delegates the framework research to the researcher subagent (or researches inline with web tools if unavailable) before presenting it",
+        "Also checks the project files for how the subject shows up in the user's own context",
+        "Starts by drawing a big-picture knowledge framework before asking about goals or boundaries",
+        "Splits the framework into a few learning stages",
+        "Clarifies the learning goal via ask_user with multiple-choice options",
+        "Probes the cognitive boundary (code-yes, ML-no) via ask_user with multiple-choice options",
+        "Presents a learning plan as a diagram organized by stage and confirms before teaching",
+        "Explains new concepts by building on prior knowledge rather than dumping facts",
+        "Asks only one question per message, mostly multiple choice, never yes/no or true/false"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I use git every day — add, commit, push, branch — but I don't actually understand how commits and branches work under the hood. Help me really get it.",
+      "expected_output": "An interactive walkthrough that maps out git's conceptual model, finds where the user's mental model stops, plans a path, and teaches the underlying model step by step.",
+      "files": [],
+      "expectations": [
+        "Asks whether the user wants notes kept in sync (e.g. in an Obsidian vault) before starting",
+        "Delegates the framework research to the researcher subagent (or researches inline with web tools if unavailable) before presenting it",
+        "Begins with a knowledge framework (big picture) of how git works",
+        "Uses ask_user to confirm the specific goal rather than assuming",
+        "Locates the boundary between rote commands and real understanding",
+        "Draws a learning-plan diagram with lines at or under 120 characters before teaching",
+        "Revises the plan on feedback until the user agrees before teaching anything",
+        "Checks understanding after each goal, one question at a time, no yes/no questions"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Explain quantum entanglement to me. I remember high school physics — atoms, electrons, energy levels — but nothing beyond that.",
+      "expected_output": "A lesson that builds from the learner's high-school physics, mapping the conceptual path to entanglement and confirming the plan before diving in.",
+      "files": [],
+      "expectations": [
+        "Starts from the stated boundary (high-school physics) rather than assuming more",
+        "Delegates the framework research to the researcher subagent (or researches inline with web tools if unavailable) before presenting it",
+        "Sketches a framework showing where entanglement sits among related concepts",
+        "Confirms the learning goal and iterates on the plan with the user before teaching",
+        "Keeps the plan anchored to the stated boundary and cuts tangential content",
+        "Only writes notes if the user opted in to synchronized Obsidian notes",
+        "Uses diagrams to convey relationships, keeping lines at or under 120 characters",
+        "Uses plain numbering and avoids hard-to-distinguish symbols such as circled numbers"
+      ]
+    }
+  ]
+}

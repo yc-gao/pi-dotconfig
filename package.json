@@ -7,6 +7,14 @@
   "description": "",
   "author": "ycgao",
   "type": "module",
+  "pi": {
+    "subagents": {
+      "agents": ["./agents"]
+    }
+  },
+  "bin": {
+    "pi-sandboxed": "./bin/pi-sandboxed"
+  },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^1.5.0",
     "typebox": "^1.4.3"
