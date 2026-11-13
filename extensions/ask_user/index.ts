@@ -101,6 +101,14 @@ export default function (pi: ExtensionAPI) {
         label: "Ask User",
         description:
             "Ask the user a question and return their answer. Supports free-text input (no options), single-select, and multi-select. Reports cancelled or empty answers distinctly.",
+        promptSnippet:
+            "Ask the user a question in the interactive UI: free-text, single-select, or multi-select",
+        promptGuidelines: [
+            "Use ask_user when you need a decision, missing detail, or clarification that only the user can provide and guessing would risk wasted work.",
+            "Use ask_user instead of assuming between materially different options; pass `options` with short, self-explanatory labels so the user can answer with one keystroke.",
+            "When calling ask_user, ask one focused question at a time and do not repeat questions the user has already answered in this conversation.",
+            "Treat Ask User results starting with `User cancelled.` as the user declining to answer; do not immediately re-ask the same question.",
+        ],
         executionMode: "sequential",
         parameters: AskUserParamsSchema,
 
