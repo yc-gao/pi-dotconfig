@@ -15,6 +15,11 @@ The artifact directory or run id, plus any note about what changed, is at the en
    `summary.md` if it exists, then the stage files present:
    `requirements.md`, `research.md`, `context.md`, `plan.md`, `implementation.md`,
    `fixes-r*.md`, `validation-r*.md`.
+   Each artifact must still honor the contract its stage owes the next one:
+   `requirements.md` carries `## Recon brief for scout` (and `## Research brief for
+   researcher` when external questions exist) before stage 2 can start, and `plan.md`
+   carries `## Handoff to worker` before stage 4 can start. A missing section means that
+   stage is incomplete, not that it is done.
 3. Establish what actually happened, not just what was recorded:
    - `git status --short`, `git log --oneline <baseline>..HEAD`, `git diff --stat <baseline>`.
    - Compare the current tree against the implementation handoff and validation files.
@@ -53,7 +58,9 @@ Rules:
 
 Use the same stage contracts, artifact paths, reviewer angles, synthesis rules, and stop
 conditions as the main coding-cycle prompt (`prompts/coding-task.md`); read it if this
-session does not already have it. Specifically:
+session does not already have it. The launch text for each stage lives there too, and the
+named sections one stage hands to the next are part of that text, so a stage you re-open
+is re-launched from the prompt rather than reconstructed from memory. Specifically:
 
 - The review-round cap is the one recorded in `run.md`, not a fresh 3.
 - Continue appending to the same `fixes-r<n>.md` / `validation-r<n>.md` numbering; never

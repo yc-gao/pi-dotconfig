@@ -102,9 +102,18 @@ This file is the requirements.md for this run; other stages read this exact path
 Artifact directory for any other output: <artifacts>/ (nothing else outside it).
 
 Bound the work to what the operator asked for. Use the code, not guesswork.
-Produce the standard requirements format, including numbered FR/NFR, decisions,
-assumptions, open questions, and the mandatory sections `Research brief for researcher`
-and `Recon brief for scout`.
+Produce the standard requirements format (numbered FR/NFR, constraints, interfaces, edge
+cases, decisions, assumptions, open questions), plus these two closing sections, which
+stage 2 consumes by name:
+
+## Research brief for researcher
+Numbered external questions only, each with why the answer changes a requirement, and any
+source already checked with its URL. No implementation research.
+
+## Recon brief for scout
+One bullet per area: **Area:** the exact file, path, or symbol to inspect. **Question:** what
+to determine there. **Why:** the FR/NFR it affects. Use paths seen while reading this
+repository; mark anything unverified as a hint to confirm, not a finding.
 ```
 
 While it runs, watch for its `interview_request` / `need_decision` messages (use
@@ -200,9 +209,17 @@ requirements.md: <artifacts>/requirements.md
 context.md:      <artifacts>/context.md
 research.md:     <artifacts>/research.md   (omit this line when research was skipped)
 Write plan.md to: <artifacts>/plan.md — this exact file is this run's plan.md.
-Use the standard plan format, including the requirement coverage map, ordered work items
-with Touch/Done when/Verify, sequence, verification strategy, rollback, blocked
-decisions, and the handoff to worker. Do not implement.
+Use the standard plan format (requirement coverage map, ordered work items with Touch /
+Done when / Verify, sequence, verification strategy, risks, rollback, blocked decisions),
+plus a closing section, which stage 4 consumes by name:
+
+## Handoff to worker
+- Read order: which files to open first.
+- The one item to start with and why it is first.
+- The constraints an eager implementer is most likely to violate.
+- Anything in the plan that is an assumption rather than a verified fact.
+
+Do not implement.
 ```
 
 Review the plan yourself before the gate:
@@ -228,7 +245,8 @@ You are worker for run <RUN_ID>. Implement the approved plan, nothing else.
 requirements.md: <artifacts>/requirements.md
 context.md:      <artifacts>/context.md
 plan.md:         <artifacts>/plan.md
-Start with <W1>. Work the items in plan order; keep each item independently verifiable.
+Start from the plan's `## Handoff to worker` section, then <W1>. Work the items in plan
+order; keep each item independently verifiable.
 Do not add behavior, refactor outside the plan, or change accepted requirements. If the
 plan is wrong or needs an unapproved decision, stop and ask through contact_supervisor
 instead of deciding.
