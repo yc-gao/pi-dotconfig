@@ -6,6 +6,8 @@ description: Requirements clarifier — interviews the operator in rounds, groun
 thinking: high
 tools: read, grep, find, ls, contact_supervisor, web_search, fetch_content, get_search_content, source_check, write
 excludeTools: edit, bash
+
+acceptanceRole: read-only
 systemPromptMode: replace
 inheritProjectContext: true
 inheritSkills: false

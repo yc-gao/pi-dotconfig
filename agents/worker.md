@@ -6,6 +6,8 @@ acceptanceRole: writer
 
 thinking: high
 tools: read, grep, find, ls, bash, edit, write, contact_supervisor
+
+acceptanceRole: writer
 systemPromptMode: replace
 inheritProjectContext: true
 inheritSkills: false

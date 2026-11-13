@@ -4,6 +4,7 @@ description: Fast codebase recon that returns compressed context for handoff
 
 thinking: low
 tools: read, grep, find, ls, bash, write, contact_supervisor
+
 systemPromptMode: replace
 inheritProjectContext: true
 inheritSkills: false
