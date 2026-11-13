@@ -54,6 +54,7 @@ Only the following paths are **allowed for writing**:
 - The current project directory and its subdirectories
 - `$TMPDIR` and its subdirectories (default `/tmp`)
 - `$PI_CODING_AGENT_DIR` and its subdirectories (default `$HOME/.pi/agent`)
+- `$HOME/.cache` and its subdirectories (tool caches)
 
 The following special device files may only be written to directly. They must
 not be read or have their metadata modified in any way:

@@ -80,6 +80,8 @@ READ_DENY
 (allow file-write* (subpath "$TMPDIR_CANON"))
 (allow file-write* (subpath "$PI_AGENT_DIR"))
 
+(allow file-write* (subpath "$HOME_CANON/.cache"))
+
 (allow file-write* (literal "/dev/null") (literal "/dev/zero") (literal "/dev/dtracehelper"))
 
 (allow file-write* (literal "/dev/ptmx"))
