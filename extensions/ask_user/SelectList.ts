@@ -46,8 +46,9 @@ export class SelectList implements Component {
                 const isSelected = this.selectedItems.has(index);
                 const shouldHighlight = isCurrent;
 
-                const prefix = isSelected ? "→ " : "  ";
-                const label = prefix + option;
+                const cursor = isCurrent ? "›" : " ";
+                const selection = isSelected ? "[x]" : "[ ]";
+                const label = `${cursor} ${selection} ${option}`;
                 lines.push(truncateToWidth(shouldHighlight ? this.theme.selectedItem(label) : label, width));
             })
         }
