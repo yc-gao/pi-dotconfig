@@ -1,5 +1,5 @@
 ---
-name: code-review-skill
+name: code-dev
 description: |
   Provides comprehensive code review guidance for React 19, Vue 3, Angular 17+, Svelte 5,
   Rust, TypeScript, Java, Java 8, PHP, Ruby, Rails, Python, Django, FastAPI, Go, C#/.NET, Kotlin, Swift, Dart, Flutter, NestJS, C/C++, Zig, CSS/Less/Sass, Qt, and more.
