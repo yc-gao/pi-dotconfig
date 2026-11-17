@@ -117,18 +117,16 @@ export default function (pi: ExtensionAPI) {
                 throw new Error("The 'ask_user' tool requires an interactive UI to be available.");
             }
 
-            if (!params.options?.length) {
-                return await executeFreeText(params, ctx, signal);
-            }
-
-            if (!params?.multiSelect) {
-                return await executeSelect(params, ctx, signal);
-            }
-
-            if (ctx.mode !== "tui") {
+            if (ctx.mode !== "tui" && params?.multiSelect) {
                 throw new Error("The 'ask_user' tool only supports multi-select when the interactive terminal UI is in use.");
             }
 
+            if (!params.options?.length) {
+                return await executeFreeText(params, ctx, signal);
+            }
+            if (!params?.multiSelect) {
+                return await executeSelect(params, ctx, signal);
+            }
             return await executeMultiSelect(params, ctx, signal);
         }
     })
