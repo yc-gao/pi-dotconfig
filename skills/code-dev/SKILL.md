@@ -70,6 +70,22 @@ Decide the approach before editing. Cover, in proportion to risk:
 - The tests or other checks that will demonstrate each acceptance criterion
 - Documentation or examples that must change with the behavior
 
+**Read the stack-specific design rules before deciding the approach.** Different code types have different design logic — the right answer for state ownership, data flow, resource lifetime, and error propagation depends on the stack. Identify the stack from the repo (`package.json`, `CMakeLists.txt`/`compile_commands.json`, config files, existing code), then consult the matching reference:
+
+| Stack | Reference | Decide with it |
+| --- | --- | --- |
+| React (SPA / client-rendered library) | [reference/react.md](reference/react.md) | component boundaries, state ownership and shape, server-state layer, effect placement, form and test design |
+| Next.js (App Router) | [reference/nextjs.md](reference/nextjs.md) | render topology, `'use client'` boundary, data fetching and serialization, write path (action vs route handler), cache and revalidation model, authz points |
+| C++ (C++20+, based on the C++ Core Guidelines) | [reference/cpp.md](reference/cpp.md) | ownership and lifetime model, special members, error mechanism per boundary, parameter/return conventions, hierarchy shape, concurrency model, ABI decisions |
+| CMake (target-based, 3.25+/4.x) | [reference/cmake.md](reference/cmake.md) | target graph, what each target exports (`PRIVATE`/`PUBLIC`/`INTERFACE`), dependency policy, install/export surface, presets, warning/sanitizer plumbing |
+
+- Read the file before writing the plan, and reflect its decisions in the plan (it ends with a design-review checklist that doubles as the plan gate).
+- A Next.js project uses both: `nextjs.md` governs the server/client boundary and data flow, `react.md` governs everything inside client components.
+- If the stack is not covered, say so and plan from the universal principles above; add a reference doc only when the stack will keep recurring.
+- A C++ change: `cpp.md` governs ownership, special members, error mechanism, and concurrency; formatting and lint settings still come from the project's own `clang-format`/`clang-tidy` config.
+- A build-system change: `cmake.md` governs the target graph and usage requirements — no `include_directories`/`link_libraries`, no global `CMAKE_CXX_FLAGS`, presets rather than ad-hoc configure commands.
+- Do not contradict the reference silently. If project convention or the platform version genuinely differs, state the deviation and the reason in the plan.
+
 For anything multi-step or risky, state the plan in the conversation before implementing. Ask the user to choose only between materially different approaches with real trade-offs — not to rubber-stamp the obvious one.
 
 Before implementing any change, present the proposed design to the user and wait for their explicit confirmation. Scale the detail to the change; cover the goal and scope, approach, affected components, important trade-offs, and how it will be verified. Do not treat silence or an unrelated response as approval.
@@ -78,7 +94,7 @@ If the user disagrees or requests changes, revise the design and ask for confirm
 
 For complex changes, write a design document or ADR to make the proposal easier to review. Keep simple changes in the conversation rather than creating unnecessary documentation.
 
-**Done when:** scope, approach, and verification are decided, and a reviewer could predict the diff.
+**Done when:** scope, approach, and verification are decided, the relevant stack reference's checklist is satisfied (or deviations are justified), and a reviewer could predict the diff.
 
 ### 4. Implement (after user confirmation)
 
