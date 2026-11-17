@@ -8,12 +8,6 @@ description: |
   Use when: reviewing pull requests, conducting PR reviews, code review, reviewing code changes,
   establishing review standards, mentoring developers, architecture reviews, security audits,
   performance reviews, checking code quality, finding bugs, giving feedback on code.
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
-  - WebFetch
 ---
 
 # Code Review Skill
