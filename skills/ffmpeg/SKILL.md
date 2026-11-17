@@ -1,3 +1,4 @@
+---
 name: ffmpeg
 description: >
   Guide for using FFmpeg - a comprehensive multimedia framework for video/audio encoding, conversion, streaming, and filtering. Use when processing media files, converting formats, extracting audio, creating streams, applying filters, or optimizing video/audio quality.
