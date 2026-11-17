@@ -1,3 +1,10 @@
+# Project Documentation First
+
+First inspect the project's `docs/` directory and read
+the documentation relevant to the task. Then proceed with code investigation,
+implementation, and validation. If the project has no `docs/` directory or no
+relevant documentation, continue with the normal workflow.
+
 # File Access and Write Restrictions
 
 The following restrictions apply to all file operations in this session and
