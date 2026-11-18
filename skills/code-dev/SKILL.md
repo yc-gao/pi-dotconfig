@@ -70,6 +70,14 @@ Decide the approach before editing. Cover, in proportion to risk:
 - The tests or other checks that will demonstrate each acceptance criterion
 - Documentation or examples that must change with the behavior
 
+**Plan the minimal change, focused on the current task.** Start from the smallest edit that satisfies the acceptance criteria, then justify every part of the plan that goes beyond it:
+
+- Change only what this requirement forces. No opportunistic refactors, renames, formatting sweeps, dependency bumps, or "while I'm here" fixes — they belong in a separate task.
+- Prefer extending an existing function, option, or table over introducing a new abstraction, module, or config knob.
+- Touch the fewest files and surfaces that still keep the change coherent. Nine files because the behavior requires it is fine; nine files because it reads tidier is not.
+- List out-of-scope problems you noticed as follow-ups; do not fold them into this plan.
+- Every planned edit must trace back to a line of the plan. If a change cannot, it is scope creep — drop it or ask the user to include it explicitly.
+
 **Read the stack-specific design rules before deciding the approach.** Different code types have different design logic — the right answer for state ownership, data flow, resource lifetime, and error propagation depends on the stack. Identify the stack from the repo (`package.json`, `CMakeLists.txt`/`compile_commands.json`, config files, existing code), then consult the matching reference:
 
 | Stack | Reference | Decide with it |
@@ -94,7 +102,7 @@ If the user disagrees or requests changes, revise the design and ask for confirm
 
 For complex changes, write a design document or ADR to make the proposal easier to review. Keep simple changes in the conversation rather than creating unnecessary documentation.
 
-**Done when:** scope, approach, and verification are decided, the relevant stack reference's checklist is satisfied (or deviations are justified), and a reviewer could predict the diff.
+**Done when:** scope, approach, and verification are decided, the relevant stack reference's checklist is satisfied (or deviations are justified), the plan states the minimal diff that fulfills the task and why nothing more is needed, and a reviewer could predict the diff.
 
 ### 4. Implement (after user confirmation)
 
