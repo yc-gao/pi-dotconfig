@@ -1,7 +1,7 @@
 ---
 name: first-principles
-description: Rebuild a decision from verified constraints instead of reasoning by analogy. Use whenever the user asks to analyze from first principles ("第一性原理", "从根本分析", "从零开始思考", "拆解一下", "思考本质", "think from scratch"), questions whether a design is actually right ("这个设计合理吗", "这真的必要吗", "为什么要这样做", "why are we doing it this way", "is this the right approach"), pushes back on a convention ("挑战假设", "challenge assumptions", "行业都这么做", "best practice 说"), asks for a better option ("有没有更好的方案", "is there a better solution", "值不值得"), or faces a technology/architecture/product direction choice, design review, cost challenge, or "should we build or buy" question — even when they never use the phrase "first principles". Also use when an answer is drifting toward "Company X does it this way". Do not use for routine implementation, bug fixing, API/doc lookup, or work the user has already decided on and simply wants executed.
-version: 0.3.0
+description: Rebuild a decision from verified constraints instead of reasoning by analogy. Use whenever the user asks to analyze from first principles ("第一性原理", "从根本分析", "从零开始思考", "拆解一下", "思考本质", "think from scratch"), questions whether a design is actually right ("这个设计合理吗", "这真的必要吗", "为什么要这样做", "why are we doing it this way", "is this the right approach"), pushes back on a convention ("挑战假设", "challenge assumptions", "行业都这么做", "best practice 说"), asks for a better option ("有没有更好的方案", "is there a better solution", "值不值得"), or faces a technology/architecture/product direction choice, design review, cost challenge, or "should we build or buy" question — even when they never use the phrase "first principles". Also use when an answer is drifting toward "Company X does it this way". Do not use for routine implementation, bug fixing, API/doc lookup, or work the user has already decided on and simply wants executed. Analysis only: this skill never writes, edits, or executes anything.
+version: 0.4.0
 ---
 
 # First Principles Thinking
@@ -9,6 +9,22 @@ version: 0.3.0
 A method for taking a decision apart into constraints that can be checked, then rebuilding a solution only from those. Its value is not the report it produces — it is the moment an assumption that everyone was relying on turns out to be false.
 
 The failure mode to avoid is **analysis theater**: a tidy five-section document full of confident "ground truths" that were never verified, ending in the same recommendation the user started with. Every rule below exists to prevent that.
+
+## Scope: analysis only — do not execute
+
+This skill is **thinking only**. It produces analysis, a recommendation, and the ledger behind it. It does **not** authorize action.
+
+**Forbidden while applying this skill:**
+- Writing, editing, deleting, or generating code or config files
+- Running builds, migrations, deploys, scripts, or any state-changing command
+- Creating branches, commits, PRs, tickets, or documents outside the analysis reply
+- Making purchases, provisioning infrastructure, or changing settings in any system
+
+**Allowed:** reading files and code, searching, inspecting config, and reporting findings — read-only investigation needed to label a ground truth `[verified]`.
+
+**Handoff rule:** end the analysis with a recommendation. If the user then wants it implemented, that is a *separate* request handled outside this skill — restate it and treat it as a new task. "Do the analysis" is never permission to also do the change.
+
+When in doubt, stop at the recommendation and ask.
 
 ## Step 0: Size the decision first
 
@@ -159,6 +175,7 @@ Match the format to the tier. Do not use the long template for a Tier 1 question
 
 ## Boundaries
 
+- **Analysis, not execution.** This skill stops at the recommendation. No files written, no commands that change state, no side effects. See *Scope: analysis only* above. Analysis is not consent to implement.
 - **Budget:** Tier 1 is the default; Tier 2 only for irreversible or cross-team decisions. If the analysis has run longer than the decision is worth, stop and say so.
 - **No false precision.** Never invent numbers, benchmarks, or pricing to strengthen a case.
 - **No contrarianism for its own sake.** Existing solutions win by default; the burden is on the analysis to show the gap is real (10× wrong, not 1.2×).
@@ -177,6 +194,7 @@ If a box can't be ticked, lower the stated confidence — don't quietly skip it.
 - [ ] Recommendation compared explicitly against the default
 - [ ] Sensitivity stated: what fact would flip the conclusion
 - [ ] Confidence level with its reason
+- [ ] Analysis only — nothing was executed, written, or changed on the user's behalf
 
 ## Additional Resources
 
