@@ -1,11 +1,11 @@
 ---
 name: learning-guide
 description: >
-  Teach a topic to a user through an interactive, one-on-one lesson. Use when
-  the user asks to learn, understand, or be taught a topic ("teach me X",
-  "explain X to me", "help me understand X", "walk me through X"), or says
-  they want to really get how something works. Not for quick factual lookups
-  or one-line definitions.
+  Teach a topic to a user through an interactive, one-on-one lesson.
+  Use when the user asks to learn, understand, or be taught a topic ("teach me X",
+  "explain X to me", "help me understand X", "walk me through X", "how to X", "如何", "理解", "学习"), or says
+  they want to really get how something works.
+  Not for quick factual lookups or one-line definitions.
 ---
 
 # Learning guide
