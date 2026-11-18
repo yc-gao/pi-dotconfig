@@ -235,35 +235,8 @@ First principles thinking can also lead to over-engineering if misapplied:
 
 ---
 
-## Template for Your Analysis
+## Analysis Template
 
-```markdown
-## First Principles: [Decision]
+The canonical templates live in one place: `output-templates.md` (Tier 0/1/2 plus the pre-handoff checklist). This file is examples, not format — do not keep a second copy of the template here.
 
-### Conventional Wisdom
-[What everyone assumes]
-
-### Problem Essence
-[Core need in one sentence]
-
-### Assumptions Table
-| Assumption | Challenge | Verdict |
-|------------|-----------|---------|
-
-### Ground Truth Ledger
-- `[verified]` [Fact 1] — [source]
-- `[derived]` [Fact 2] — [from what]
-- `[assumed]` [Fact 3] — verify by [method], cost [time]
-
-### Reasoning Chain
-[Truth] → [Inference] → [Conclusion]
-*(Deletion test: removing [component] leaves the core problem solved / unsolved)*
-
-### Decision
-[What to do, and how it differs from the default]
-
-### Sensitivity
-If [assumption] is false, this flips to [alternative]. Confidence: [high/medium/low].
-```
-
-Labels matter more than the template. An entry you cannot source is an assumption, and an assumption you did not flag is how this analysis becomes a justification for a decision already made.
+What a template cannot carry is the labels, and the labels matter more than the shape. An entry you cannot source is an assumption, and an assumption you did not flag is how this analysis becomes a justification for a decision already made.
