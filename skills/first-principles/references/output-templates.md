@@ -12,10 +12,14 @@ No template. One to three sentences, usually ending in the question that decides
 
 ```markdown
 **Core problem:** [outcome, one sentence]
-**Load-bearing assumption:** [the one that matters] — [verified / assumed + how to check]
+**Load-bearing assumption:** [the one that matters] — [given / verified / assumed + how to check]
 **Recommendation:** [what to do]
 **If this is wrong:** [the fact that would flip it]
+**Confidence:** high / medium / low — because [which label carries it]
+**Need from you:** [data they already have that would settle it — omit only if nothing is missing]
 ```
+
+State the tier in the first line ("Tier 1 — awkward to reverse, one team"). Drop the last two lines only if the analysis genuinely needs nothing further; never drop `Confidence` silently — lower it instead.
 
 Worked example: `examples/quick-check.md`.
 
@@ -34,7 +38,8 @@ Worked example: `examples/quick-check.md`.
 | [assumption] | [why it might not hold] | [source / "none"] | Keep / Discard / Modify |
 
 ### 3. Ground Truth Ledger
-- `[verified]` [fact] — [source]
+- `[given]` [fact] — [who said it]
+- `[verified]` [fact] — [source, and who measured]
 - `[derived]` [fact] — [from what]
 - `[assumed]` [fact] — verify by [method], cost [time]
 
@@ -56,12 +61,16 @@ Worked example: `examples/architecture-review.md`.
 
 If a box cannot be ticked, lower the stated confidence — do not quietly skip it.
 
-- [ ] Problem stated as an outcome, not a solution
+- [ ] Problem stated as an outcome, not a solution; ambiguous proposals disambiguated in one line
 - [ ] Tier chosen and stated
 - [ ] Every load-bearing assumption has a verdict and an evidence note
-- [ ] Every ground truth carries a label; `[assumed]` entries carry a verification plan
+- [ ] Every ground truth carries a label; user self-reports are `[given]`, not `[verified]`
+- [ ] No comparative `[derived]` without the arithmetic shown
+- [ ] `[assumed]` / `[blocked]` entries carry a verification plan
 - [ ] Deletion test run on the proposal itself
-- [ ] Recommendation compared explicitly against the default
+- [ ] Recommendation compared explicitly against the default and the unmentioned alternatives
+- [ ] "Measure first" carries a closed-form threshold, not a point estimate
+- [ ] Asked what the user already has before prescribing new measurement
 - [ ] Sensitivity stated: what fact would flip the conclusion
 - [ ] Confidence level with its reason
 - [ ] Analysis only — nothing was executed, written, or changed on the user's behalf
