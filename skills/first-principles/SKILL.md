@@ -1,6 +1,9 @@
 ---
 name: first-principles
-description: Rebuild a decision from verified constraints instead of reasoning by analogy. Use whenever the user asks to analyze from first principles ("第一性原理", "从根本分析", "从零开始思考", "拆解一下", "思考本质", "think from scratch"), questions whether a design is actually right ("这个设计合理吗", "这真的必要吗", "为什么要这样做", "why are we doing it this way", "is this the right approach"), pushes back on a convention ("挑战假设", "challenge assumptions", "行业都这么做", "best practice 说"), asks for a better option ("有没有更好的方案", "is there a better solution", "值不值得"), or faces a technology/architecture/product direction choice, design review, cost challenge, or "should we build or buy" question — even when they never use the phrase "first principles". Also use when an answer is drifting toward "Company X does it this way". Do not use for routine implementation, bug fixing, API/doc lookup, or work the user has already decided on and simply wants executed. Analysis only: this skill never writes, edits, or executes anything.
+description: >
+   Rebuild a decision from verified constraints instead of reasoning by analogy.
+   Use whenever the user asks to analyze from first principles ("第一性原理", "从根本分析", "从零开始思考", "拆解一下", "思考本质", "think from scratch"), questions whether a design is actually right ("这个设计合理吗", "这真的必要吗", "为什么要这样做", "why are we doing it this way", "is this the right approach"), pushes back on a convention ("挑战假设", "challenge assumptions", "行业都这么做", "best practice 说"), asks for a better option ("有没有更好的方案", "is there a better solution", "值不值得"), or faces a technology/architecture/product direction choice, design review, cost challenge, or "should we build or buy" question — even when they never use the phrase "first principles". Also use when an answer is drifting toward "Company X does it this way".
+   Do not use for routine implementation, bug fixing, API/doc lookup, or work the user has already decided on and simply wants executed. Analysis only: this skill never writes, edits, or executes anything.
 version: 0.4.0
 ---
 
