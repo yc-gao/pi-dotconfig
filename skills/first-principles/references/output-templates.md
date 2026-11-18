@@ -1,27 +1,6 @@
-# Output Templates
+# Output: Tier 2 and Handoff Check
 
-Load for Step 0 tier selection detail, Tier 2 output, and the pre-handoff checklist. Write in the language the user used.
-
-## Tier 0
-
-No template. One to three sentences, usually ending in the question that decides it:
-
-> Is this solving the real problem, or a symptom of it?
-
-## Tier 1 (default, ≤10 lines)
-
-```markdown
-**Core problem:** [outcome, one sentence]
-**Load-bearing assumption:** [the one that matters] — [given / verified / assumed + how to check]
-**Recommendation:** [what to do]
-**If this is wrong:** [the fact that would flip it]
-**Confidence:** high / medium / low — because [which label carries it]
-**Need from you:** [data they already have that would settle it — omit only if nothing is missing]
-```
-
-State the tier in the first line ("Tier 1 — awkward to reverse, one team"). Drop the last two lines only if the analysis genuinely needs nothing further; never drop `Confidence` silently — lower it instead.
-
-Worked example: `examples/quick-check.md`.
+Tier 0 and Tier 1 shapes live in `SKILL.md` — do not duplicate them here. Write in the language the user used.
 
 ## Tier 2
 
@@ -52,10 +31,11 @@ Worked example: `examples/quick-check.md`.
 **Confidence:** high / medium / low — because [which label is load-bearing]
 **Sensitivity:** if [assumption] is false, this flips to [alternative]
 **Trade-offs accepted:** [what we're giving up, and why that's acceptable]
-**Not verified:** [what we'd need to check before committing real money]
+**Not verified:** [what to check before committing real money]
+**Revisit trigger:** [the measurable change that reopens this]
 ```
 
-Worked example: `examples/architecture-review.md`.
+Worked example: `references/worked-examples.md` § *Tier 2*.
 
 ## Checklist before handoff
 
