@@ -42,13 +42,19 @@ The phases are ordered and all of them are required. The step most often
 forgotten is Phase 1 — do not start from the goal, start from the map.
 
 ```
-0. offer synchronized notes              (user decides)
-1. researchers search in parallel, build the framework, split stages
-2. confirm the goal + cognitive boundary (user decides)
-3. agree on the learning plan            (iterate until consensus)
+0. offer synchronized notes               (user decides)
+1. researchers search in parallel, merge all briefs, build the framework,
+   split stages
+2. read the project files, locate the cognitive boundary, settle the goal
+                                          (user decides)
+3. agree on the learning plan             (iterate until consensus)
 4. teach stage by stage, checking after each task
 5. summarize and retrace the learning path (once the goal is reached)
 ```
+
+Each phase ends in an explicit gate: the research is merged and summarized
+before the boundary is probed, the goal and boundary are settled before the
+plan is drawn, and the plan is agreed before the first explanation.
 
 Keep the big picture: the framework from Phase 1 stays the backbone. Goals,
 boundary checks, stages and the plan are all read off that framework, and
@@ -66,8 +72,10 @@ Where the notes live: inside the user's Obsidian vault, displayed by Obsidian.
 When notes are synchronized, the notes are the primary display — the
 conversation explains and the vault shows. Complex visuals live there:
 Mermaid diagrams, canvases, graph views, tables, and generated image files
-referenced from the notes. If none of the richer formats fits, fall back to
-writing a raw SVG file into the vault; Obsidian renders it too. If the user
+referenced from the notes. Generated images go under the vault's
+`attachments` path and are referenced from the note by relative link, so the
+vault stays portable. If none of the richer formats fits, fall back to writing
+a raw SVG file into the vault; Obsidian renders it too. If the user
 says yes, create and keep updating the notes as the lesson advances: framework
 and stages, the agreed plan, each new node and edge, open questions, and
 misunderstandings that were corrected. If the user says no, never write notes
@@ -82,6 +90,11 @@ kinds of sources before drawing anything:
    parallel, one per research angle, via one `subagent` call with
    `workflow: "parallel"` and a `tasks` array. Do not run the angles one after
    another, and do not send a single generic brief.
+
+   The angles execute concurrently and the phase is synchronous: wait until
+   every child has reported, then merge. Do not draw a partial map from the
+   briefs that land first, and do not move on to Phase 2 while a search is
+   still running.
 
    Pick 2-4 angles that genuinely differ, for example:
 
@@ -101,9 +114,12 @@ kinds of sources before drawing anything:
    their web tools are unavailable, run the same angles in parallel inline
    with the web tools and say so.
 
-   Then merge the briefs into one framework: keep the nodes and edges the
-   angles agree on, carry contradictions forward to the user instead of
-   silently picking one, and state which sources each part rests on.
+   Then merge the briefs into one framework: sort the material into a
+   knowledge thread — what follows from what, and in which order it has to be
+   learned — and keep the nodes and edges the angles agree on. Carry
+   contradictions forward to the user instead of silently picking one, and
+   state which sources each part rests on. Report the merged result before
+   asking the user anything.
 
 2. In parallel, search the project files — repository, docs, code,
    configuration — for how the subject actually shows up in the user's own
@@ -124,26 +140,34 @@ Never skip this phase and never replace it with a list of isolated facts. It
 keeps the lesson grounded in a map, and it gives the later phases something to
 refer to.
 
-### Phase 2 — Confirm the goal and locate the cognitive boundary
+### Phase 2 — Read the project, locate the boundary, settle the goal
 
-Two things get settled here, both with the user, and neither is assumed.
+Three things happen here in this order, and the phase closes only when the
+user has agreed to the goal and the boundary. Neither is assumed.
 
-**Goal.** Read the plausible goals off the framework, guess 3-5 of them, and
-ask the user to pick one or state their own. Use `ask_user` with
-multiple-choice options.
+**1. Read the project.** Search the project's files for how the subject
+actually shows up in the user's own context — code, configuration, docs,
+notes, earlier conversation. This is evidence about the learner, not about the
+topic.
 
-**Boundary.** Find out what the user already knows and where their
-understanding stops:
+**2. Locate the boundary.** Find out what the user already knows and where
+their understanding stops:
 
-1. Gather evidence of existing knowledge before asking: the project files and
-   external sources already read in Phase 1, plus the user's notes and earlier
-   conversation.
+1. Start from the evidence just gathered, the sources read in Phase 1, and
+   the user's earlier conversation.
 2. Then probe with `ask_user`: present candidate starting points read off the
    framework and let the user say which ones they already hold, and where they
    start to feel unsure.
 
 Do not assume the boundary; find it. It is the launch point for all teaching
 that follows.
+
+**3. Settle the goal.** Read the plausible goals off the framework and the
+boundary just located, guess 3-5 of them, and ask the user to pick one or
+state their own. Use `ask_user` with multiple-choice options.
+
+Then restate both back in one short message — boundary here, goal there — and
+wait for agreement before Phase 3.
 
 ### Phase 3 — Propose the learning plan and reach consensus
 
@@ -227,18 +251,20 @@ note. Raw SVG is the fallback when a richer format cannot express the diagram.
    Obsidian vault.
 3. Agent launches several `researcher` children in parallel — foundations,
    authoritative reference, practice — while searching the project files for
-   how transformers appear in the user's own code, then merges the briefs into
-   one framework (vectors → similarity → attention → self-attention →
-   transformers) split into stages such as "representing meaning",
-   "attention", "transformer blocks".
-4. Agent proposes candidate goals via `ask_user`, e.g.:
+   how transformers appear in the user's own code. It waits for every child,
+   then merges the briefs into one framework (vectors → similarity → attention
+   → self-attention → transformers) split into stages such as "representing
+   meaning", "attention", "transformer blocks".
+4. Agent asks one boundary question, e.g. "Which of these do you already
+   understand well?" with options such as vectors and embeddings, dot
+   products, neural networks, all of them.
+5. Agent then proposes candidate goals via `ask_user`, chosen against that
+   boundary, e.g.:
    - Understand attention well enough to read a paper.
    - Grasp the intuition only, no math.
    - Implement a minimal transformer.
-5. User picks one.
-6. Agent searches the user's notes, then asks one boundary question, e.g.
-   "Which of these do you already understand well?" with options such as
-   vectors and embeddings, dot products, neural networks, all of them.
+6. User picks one, and the agent restates the boundary plus the goal to get
+   explicit agreement.
 7. Agent draws the plan, presents it, adjusts on feedback, and repeats until
    the user agrees:
 

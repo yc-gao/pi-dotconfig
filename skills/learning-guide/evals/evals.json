@@ -47,6 +47,7 @@
         "Confirms the learning goal and iterates on the plan with the user before teaching",
         "Keeps the plan anchored to the stated boundary and cuts tangential content",
         "Only writes notes if the user opted in to synchronized Obsidian notes",
+        "Places generated image files under the vault's attachments path and references them from the note",
         "Uses diagrams to convey relationships, keeping lines at or under 120 characters",
         "Uses plain numbering and avoids hard-to-distinguish symbols such as circled numbers"
       ]
