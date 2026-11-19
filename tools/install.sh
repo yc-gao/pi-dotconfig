@@ -6,8 +6,8 @@ readonly AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 readonly BIN_DIR="${HOME}/.local/bin"
 
 readonly -a PACKAGES=(
-	'npm:pi-web-access'
-	'npm:pi-subagents'
+	'npm:pi-web-access'  # Web search, content extraction, and video understanding for Pi agent
+	'npm:pi-subagents'   # lets Pi delegate work to focused child agents
 )
 
 readonly -a AGENT_LINKS=(
