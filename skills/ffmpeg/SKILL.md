@@ -37,6 +37,29 @@ For machine-readable output, print format and stream details as JSON:
 ffprobe -v error -show_format -show_streams -of json "input.mp4"
 ```
 
+### Check Supported Codecs and Encoders
+
+List codecs recognized by this FFmpeg build, including whether each is available for decoding, encoding, or both:
+
+```bash
+ffmpeg -hide_banner -codecs
+```
+
+To see only available encoders or decoders, use:
+
+```bash
+ffmpeg -hide_banner -encoders
+ffmpeg -hide_banner -decoders
+```
+
+Filter the encoder list to check for common video codec names:
+
+```bash
+ffmpeg -hide_banner -encoders | grep -Ei '264|265|av1|vp9'
+```
+
+The lists depend on how FFmpeg was built. An encoder being listed does not guarantee that required hardware or runtime support is available.
+
 ### Convert or Re-encode Video
 
 Convert the input to MP4 using FFmpeg's default stream selection and codec settings:
