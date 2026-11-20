@@ -142,20 +142,27 @@ For content that requires authentication, handle the user's cookie data as a sec
 1. **Collect the cookie header.** Use `generate_file_from_input` to save `Cookie` request header to a private temporary file such as `cookie-header.txt`. If the cookie domain is unclear, ask the user to confirm it.
 2. **Convert it to Netscape format.** Pass the header file to the converter on standard input. Replace `.example.com` with the actual cookie domain; do not use a placeholder domain. Store the generated file in a private location:
 
-   ```bash
-   python3 scripts/cookies_from_string.py \
-     --domain .example.com \
-     --output cookies.txt \
-     < cookie-header.txt
-   ```
+```bash
+# Run the converter shipped with this skill (scripts/cookies_from_string.py, resolved against this SKILL.md's directory).
+python3 scripts/cookies_from_string.py \
+  --domain .example.com \
+  --output cookies.txt \
+  < cookie-header.txt
+```
 
 3. **Use the converted file with yt-dlp:**
 
-   ```bash
-   yt-dlp --cookies cookies.txt "URL"
-   ```
+```bash
+yt-dlp --cookies cookies.txt "URL"
+```
 
-Keep both files private. Delete the temporary header file after conversion and the Netscape-format file when it is no longer needed. Never display either file's contents. When the user's own browser already holds the session and they agree to read from it, `--cookies-from-browser chrome` skips the manual conversion and reads the browser profile directly; prefer the converted file when the browser is not on the same machine.
+4. **Delete the cookie files as soon as the download ends.** This is mandatory, not optional cleanup. Once yt-dlp exits — success or failure — remove every cookie-related file this procedure created, in the same turn, and confirm the deletion to the user:
+
+```bash
+rm -f cookies.txt cookie-header.txt
+```
+
+If a different filename or location was used, delete those exact paths instead. Do not leave cookie files around for a retry: if a retry is needed, repeat the whole procedure with a freshly copied `Cookie` header. Never display either file's contents.
 
 ## Troubleshooting
 

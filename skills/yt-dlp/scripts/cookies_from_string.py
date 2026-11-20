@@ -29,7 +29,11 @@ def normalize_domain(domain: str) -> Tuple[str, str]:
     if any(not DOMAIN_LABEL_RE.fullmatch(label) for label in ascii_host.split(".")):
         raise ValueError("domain is not a valid hostname")
 
-    return ascii_host, "TRUE" if includes_subdomains else "FALSE"
+    # http.cookiejar asserts `domain_specified == initial_dot`, so the leading dot
+    # must be preserved whenever the subdomain flag is TRUE.
+    if includes_subdomains:
+        return "." + ascii_host, "TRUE"
+    return ascii_host, "FALSE"
 
 
 def parse_cookie_header(header: str) -> List[Tuple[str, str]]:
