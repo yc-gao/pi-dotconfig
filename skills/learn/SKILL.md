@@ -2,7 +2,7 @@
 name: learn
 description: >
   Teach a topic from what the user already knows: research it, agree on a goal, verify their existing knowledge, plan, then teach and test one task at a time, optionally recording synced notes in their Obsidian vault.
-  Use whenever the user wants to learn, understand, or be taught something rather than have it done for them — "teach me X", "help me learn X", "explain X properly", "give me a learning plan for X", "how should I study X", "学一下 X", "教我 X", "系统学习 X", "帮我搞懂 X", "我想入门 X" — even when they never mention a plan, notes, or questioning. Also use it when the user wants to level up a skill over several sessions instead of asking one question.
+  Use whenever the user wants to learn, understand, or be taught something rather than have it done for them — "teach me X", "help me learn X", "explain X properly", "give me a learning plan for X", "how should I study X", "学一下 X", "教我 X", "系统学习 X", "帮我搞懂 X", "我想入门 X", "how to X", "如何 X" — even when they never mention a plan, notes, or questioning. Also use it when the user wants to level up a skill over several sessions instead of asking one question.
   Do not use it for a single lookup or a one-off explanation the user will not build on; answer directly in that case.
 ---
 
