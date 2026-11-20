@@ -1,0 +1,24 @@
+{
+    "name": "generate_file_from_input",
+    "version": "1.0.0",
+    "description": "Pi extension: create a file from user input gathered with ctx.ui.input",
+    "main": "index.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "pi-package"
+    ],
+    "author": "",
+    "license": "ISC",
+    "type": "module",
+    "pi": {
+        "extensions": [
+            "./index.ts"
+        ]
+    },
+    "devDependencies": {
+        "@earendil-works/pi-coding-agent": "^1.5.2",
+        "@earendil-works/pi-tui": "^1.5.2"
+    }
+}
