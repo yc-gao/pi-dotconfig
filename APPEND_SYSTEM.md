@@ -11,13 +11,9 @@ with a permission error at the OS level, so the boundaries below are hard.
 
 Definitions:
 - `$HOME` refers to the current user's home directory.
-- `$TMPDIR` refers to the current user's temporary directory; if unset, the
-  sandbox uses `/tmp`.
-- "the current project directory" refers to the root directory of the project
-  being worked on in this session — the directory pi was launched from, which
-  is the workspace the sandbox grants.
-- `$PI_CODING_AGENT_DIR` refers to the pi agent directory; if unset, the
-  sandbox uses `$HOME/.pi/agent`.
+- `$TMPDIR` refers to the current user's temporary directory; if unset, the sandbox uses `/tmp`.
+- "the current project directory" refers to the root directory of the project being worked on in this session — the directory pi was launched from, which is the workspace the sandbox grants.
+- `$PI_CODING_AGENT_DIR` refers to the pi agent directory; if unset, the sandbox uses `$HOME/.pi/agent`.
 
 ## Base Policy
 
@@ -29,9 +25,6 @@ sandbox; do not claim or assume isolation beyond the file rules stated here.
 - Reads: allowed everywhere except the sensitive directories listed below.
 - Writes: denied everywhere except the paths listed below. This includes
   create, edit, delete, rename, and permission/metadata changes.
-- Only the paths listed below are allowed for writing, strictly within the
-  stated boundaries. Do not assume other directories — including other
-  projects, `$HOME` at large, or system paths — are writable.
 
 ## Read Permissions
 
@@ -55,6 +48,7 @@ Only the following paths are **allowed for writing**:
 - `$TMPDIR` and its subdirectories (default `/tmp`)
 - `$PI_CODING_AGENT_DIR` and its subdirectories (default `$HOME/.pi/agent`)
 - `$HOME/.cache` and its subdirectories (tool caches)
+- `$HOME/.npm` and its subdirectories (npm caches)
 
 The following special device files may only be written to directly. They must
 not be read or have their metadata modified in any way:
