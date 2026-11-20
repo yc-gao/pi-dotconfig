@@ -1,7 +1,7 @@
 ---
 name: ffmpeg
 description: >
-  Guide to using FFmpeg and ffprobe to inspect, convert, remux, encode, resize, and trim media; extract frames or audio; select streams; and adjust audio volume.
+  Guide to using FFmpeg and ffprobe to inspect, convert, remux, encode, resize, trim, and concatenate media; extract frames or audio; select streams; and adjust audio volume.
   Use when performing common video or audio processing tasks.
 ---
 
@@ -15,7 +15,7 @@ Use this skill when:
 
 - Inspecting media file properties and streams with `ffprobe`
 - Converting between media containers or re-encoding video and audio
-- Resizing or trimming video, or extracting a still frame
+- Resizing, trimming, or concatenating video, or extracting a still frame
 - Extracting audio, converting audio formats, or adjusting volume
 - Selecting specific video or audio streams from a file
 
@@ -122,6 +122,23 @@ ffmpeg -n -i "input.mp4" \
   -ss 00:01:23.000 -frames:v 1 \
   "output.jpg"
 ```
+
+### Concatenate Videos
+
+Create a text file named `inputs.txt` with one relative path per clip, in the order they should appear:
+
+```text
+file 'clip1.mp4'
+file 'clip2.mp4'
+```
+
+Concatenate the clips by copying their streams without re-encoding:
+
+```bash
+ffmpeg -n -f concat -i "inputs.txt" -c copy "combined.mp4"
+```
+
+For stream copying to work, the clips must have matching stream layouts, codecs, and compatible codec parameters. If they differ, re-encode them to matching settings before concatenating.
 
 ### Select Specific Streams
 
