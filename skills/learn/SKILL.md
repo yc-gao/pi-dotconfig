@@ -2,7 +2,7 @@
 name: learn
 description: >
   Teach a topic to the user with a structured, confirmation-gated learning workflow: research a knowledge framework, agree on learning goals, verify the user's existing cognitive boundary with quiz questions, co-design a progressive plan, then teach step by step with mastery checks and a final recap, optionally writing synchronized Obsidian notes.
-  Use this skill whenever the user wants to learn or be taught something — "teach me X", "I want to learn X", "explain X properly", "make me a study plan for X", "help me understand X from scratch", "guide me through X" — even if they do not say the word "learn".
+  Use this skill whenever the user wants to learn or be taught something — "teach me X", "I want to learn X", "explain X properly", "make me a study plan for X", "help me understand X from scratch", "guide me through X", "how to X", "如何 X" — even if they do not say the word "learn".
   Do not use it for one-off factual questions or quick explanations that need no plan.
 ---
 
