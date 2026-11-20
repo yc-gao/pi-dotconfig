@@ -32,13 +32,21 @@ Global rule: never advance past a gate. If the user rejects a proposal, revise i
 
 ### Step 0 — Set up notes
 
-Before teaching anything, ask whether the user wants synced notes for this session. Notes hold the core points, the logical thread of the path, and the record of the check questions. If the user declines, keep everything in the conversation and skip the note steps below.
+Before teaching anything, ask whether the user wants synced notes for this session. Notes hold the core points, the logical thread of the path, and the record of the check questions.
+
+If the answer is yes, create the skeleton in the current directory right away, before any research, using the structure in `references/note-structure.md`. Leave the goal and starting-point lines blank for steps 2 and 3 to fill, and leave the other sections empty. The empty sections are a checklist of what is still unresolved, and filling them in as each step completes is far cheaper than reconstructing the session at the end.
+
+If the user declines, keep everything in the conversation and skip the note steps below.
 
 ### Step 1 — Research and build the knowledge framework
 
 Launch several `researcher` subagents in parallel, one per angle, so no major branch of the topic is missed. Useful angles: the standard textbook structure, the practitioner's working model, the common misconceptions, and recent developments if the topic moves.
 
-Then synthesize their briefs into a knowledge framework: the core concepts, the relations between them, and which concepts are entry points versus deep ends. The framework is the source of candidate goals in step 2 and the skeleton of the note in step 0. Keep it visible to the user — an unexplained framework turns step 2 into a quiz about your research rather than a choice about their goal.
+Then synthesize their briefs into a knowledge framework: the core concepts, the relations between them, and which concepts are entry points versus deep ends. The framework is the source of candidate goals in step 2 and the skeleton of the note in step 0.
+
+Keep it visible to the user — an unexplained framework turns step 2 into a quiz about your research rather than a choice about their goal. Mark each concept as an entry point (a shallow way in, usable almost immediately) or a deep end (needs several earlier concepts first); that split is what makes the framework usable for choosing a goal and for planning in step 4.
+
+If notes are in use, write the framework into the note's Framework section as a top-down Mermaid diagram before moving on, so the skeleton starts filling from step 1 instead of step 6.
 
 ### Step 2 — Agree on the goal
 
@@ -56,9 +64,11 @@ Treat every inference as a hypothesis, never as fact:
 
 If the available evidence cannot support a reliable inference, ask a question instead of filling the gap with an assumption. An invented starting point is worse than an extra question.
 
+With notes in use, record the confirmed boundary on the note's starting-point line and the material you are deliberately skipping under Open questions, with the reason it was skipped. A skip list nobody wrote down becomes a gap the user discovers months later.
+
 ### Step 4 — Build the plan
 
-Order the tasks from the verified boundary toward the goal, each building on the last, and state for each task what the user will be able to do afterwards. Cut anything the goal does not need. Present the plan, take amendments, and start only after agreement.
+Order the tasks from the verified boundary toward the goal, each building on the last, and state for each task what the user will be able to do afterwards. Cut anything the goal does not need. Present the plan, take amendments, and start only after agreement. Once it is agreed, write it into the note's Path section in the order it will be taught, not the order the research produced it.
 
 ### Step 5 — Teach and test, one task at a time
 
@@ -70,13 +80,13 @@ For each task: explain it with an example anchored in something the user already
 
 ### Step 6 — Summarize
 
-Once the goal is met, walk the whole path: the starting point, each key node, the relations between them, and what is still unfilled. Write the result back into the boundary so the next session starts from the new level instead of re-testing the old one.
+Once the goal is met, walk the whole path: the starting point, each key node, the relations between them, and what is still unfilled. Write the result back into the boundary so the next session starts from the new level instead of re-testing the old one, and put where the next session should begin under Next in the note.
 
 ## Notes and materials
 
 Notes live in the current working directory, usually an Obsidian vault, so Obsidian manages and renders them.
 
-- Create the note from the template in `templates/`; if none fits, use the structure in `references/note-structure.md`.
+- Create the note from the structure in `references/note-structure.md` at step 0, and keep its section headings.
 - Show knowledge relations with Mermaid diagrams, laid out top-down so the path reads in teaching order.
 - Save SVG or PNG files in `attachments/` and link them from the note rather than inlining them.
 - Update the note as each step completes. Notes reconstructed at the end record what you remember, not what the user struggled with — and the struggle is the useful part.

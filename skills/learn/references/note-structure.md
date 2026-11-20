@@ -1,6 +1,6 @@
 # Note structure
 
-Fallback skeleton for a learning note when `templates/` in the current vault has no suitable template. Keep the section headings; adapt or drop the guidance comments.
+Skeleton for a learning note, created at step 0 and filled in as each step completes. Keep the section headings; adapt or drop the guidance comments. If the vault already has a note template for this kind of topic, use that instead and map these sections onto it.
 
 ```markdown
 # <Topic>
