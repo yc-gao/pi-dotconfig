@@ -220,6 +220,47 @@ rm -f cookies.txt cookie-header.txt
 
 If a different filename or location was used, delete those exact paths instead. Do not leave cookie files around for a retry: if a retry is needed, repeat the whole procedure with a freshly copied `Cookie` header. Never display either file's contents.
 
+## Best Practices by Use Case
+
+Field-tested flag combinations, one row per recurring request. Adapt the URL and output path; keep the pattern.
+
+| Use case | Pattern | Why it works |
+| --- | --- | --- |
+| Bilibili live | `-f "best[ext=flv]/best"` | Live endpoints often expose one container; pinning FLV avoids a bad pick, `/best` keeps it working when FLV is absent |
+| YouTube live / long stream | `--live-from-start --download-archive archive.txt` | Records the DVR buffer from the beginning and makes a restart resume instead of duplicating |
+| Quality ceiling without guessing | `-S "res:1080,codec:avc" -f "bv*+ba/b"` | Sorting downgrades gracefully instead of failing on a missing format ID |
+| Playlist / channel, incremental | `--download-archive archive.txt -I 1:50 --sleep-interval 2` | Archive skips finished items, `-I` bounds the run, sleep reduces throttling |
+| Lossless audio | `-x --audio-format best` | Keeps the source codec, no re-encode, fastest |
+| Compatible audio | `-x --audio-format mp3 --audio-quality 0` | One broadly playable file, highest quality yt-dlp can produce for that codec |
+| Bilingual subtitles | `--write-subs --write-auto-subs --sub-langs "zh.*,en.*" --embed-subs` | Explicit languages avoid downloading all 40+ tracks; embedding needs FFmpeg |
+| Flaky network / long file | `-c --retries 10 --fragment-retries 10 --socket-timeout 30` | Resumes partial files and retries fragments instead of starting over |
+
+### Live stream example
+
+The canonical form for a Bilibili live room:
+
+```bash
+yt-dlp -f "best[ext=flv]/best" -o "%(title)s.%(ext)s" \
+  "https://live.bilibili.com/4629447"
+```
+
+Add `--wait-for-video 30-300` when the room is offline, and `--download-archive archive.txt` when the command may be restarted mid-recording. See **Record a live stream** for the full option set.
+
+### Sort instead of pinning
+
+`-f "best[height<=1080]"` fails when no stream matches. `-S` expresses a preference and still yields a file:
+
+```bash
+yt-dlp -S "res:1080,codec:avc" -f "bv*+ba/b" \
+  --merge-output-format mp4 -o "%(title)s.%(ext)s" "URL"
+```
+
+Use `-f` only when the user named an exact format ID from `-F` output.
+
+### Authenticated sources
+
+For X, Instagram, private or members-only videos, cookies replace the session only — keep the same format, subtitle, and output flags. Follow **Download with cookies**, then delete the cookie files as soon as the download exits.
+
 ## Troubleshooting
 
 Diagnose before retrying. Read the error yt-dlp printed, match it in the table below, apply the fix, and retry the original command — do not escalate to cookies or format overrides that the error does not justify.
