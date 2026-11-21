@@ -1,67 +1,80 @@
 ---
 name: yt-dlp
 description: >
-  Download video, audio, subtitles, and metadata from YouTube, Bilibili, TikTok, X, Instagram, and more than 1,800 other sites with yt-dlp.
-  Use this skill when a user provides a media URL and wants to download content, extract audio, retrieve subtitles or metadata, inspect available formats, or batch-download a playlist or channel. It also covers cookie-based authentication and troubleshooting HTTP 403 errors.
-  This skill is not intended for converting local media files.
+  Download video, audio, subtitles, live chat, and live streams from YouTube, Bilibili, TikTok, X, Instagram, and more than 1,800 other sites with yt-dlp.
+  Use this skill when the user gives a media page URL and wants to: inspect formats or playlist entries before downloading; download video, using a size ceiling or codec preference instead of a guessed format ID; extract audio, lossless or as MP3; fetch, select by language, or embed subtitles and live chat; download a whole or partial playlist/channel, incrementally; record a live stream, including from the start of the DVR buffer; use cookies for members-only, private, or login-required content; resume, retry, or rate-limit a download that stalled or failed with HTTP 403/429; or update yt-dlp when a site stops working.
+  This skill is not intended for converting, trimming, remuxing, or re-encoding media that already exists on disk; use the ffmpeg skill for those.
 ---
 
 # yt-dlp
 
-yt-dlp is a command-line downloader for audio and video from more than 1,800 sites. Use this skill to choose formats, download media, handle authentication, and troubleshoot common failures when given a media URL.
+Use yt-dlp to download and inspect network media from more than 1,800 supported sites. This skill covers format selection and sorting, audio extraction, subtitle and live-chat download, playlist scope, live DVR recording, authentication, and recovery from common download failures.
 
-Every operation below is a single `yt-dlp` invocation with the URL quoted. Format selections that combine separate video and audio streams are merged with FFmpeg, so a working `ffmpeg` on `PATH` is needed for those commands; verifying it with `ffmpeg -version` before the first merged download avoids a failure after the streams have already been fetched.
+Keep each operation to one `yt-dlp` invocation with the media URL quoted. Prefer explicit constraints and yt-dlp's sorting options over assumed format IDs; a format list or flat playlist list is the source of truth when exact choices matter. Commands that merge streams, embed subtitles, or extract audio require FFmpeg on `PATH`, so run `ffmpeg -version` first. This skill does not process media already on disk; use the `ffmpeg` skill for conversion, trimming, remuxing, or re-encoding.
 
 ## When to use
 
-Trigger this skill when the request involves a **network media URL** — YouTube, Bilibili, TikTok, X, Instagram, or any of the other ~1,800 supported sites — and the user wants to:
+Trigger this skill when the request involves a **network media URL** — YouTube, Bilibili, TikTok, X, Instagram, or any of the other ~1,800 supported sites. Each row names a request pattern and where it is answered, so triggers and commands never drift apart (**bold** = section, *italic* = row in **Best Practices by Use Case**).
 
-| Goal | Typical phrasing |
-| --- | --- |
-| Fetch a single video | "download this video", "save this clip" |
-| Fetch audio only | "rip the audio", "get the MP3" |
-| Fetch subtitles | "grab the subtitles", "hardcode/embed subs" |
-| Inspect before downloading | "what resolutions exist", "how many parts in this playlist" |
-| Batch-download a collection | "get the whole playlist/channel" |
-| Record a live stream | "record this live stream", "save a livestream from the start" |
-| Authenticate a source | "it says login required", "use my cookies" |
-| Diagnose a failed download | "it fails with 403", "format not available" |
+| Request | Typical phrasing | Covered by |
+| --- | --- | --- |
+| Fetch a single video | "download this video", "save this clip" | **Download video** |
+| Cap quality without failing | "not above 1080p", "prefer h264 so it plays anywhere" | **Sort instead of pinning** |
+| Fetch audio only | "rip the audio", "get the MP3", "keep the original codec" | **Extract audio**, *Lossless / Compatible audio* |
+| Fetch subtitles or chat | "grab the subtitles", "embed zh and en subs", "save the chat log" | **Download subtitles**, *Bilingual subtitles*, **Record a live stream** |
+| Inspect before downloading | "what resolutions exist", "how many parts in this playlist" | **Inspect available formats** |
+| Batch-download a collection | "get the whole playlist/channel", "just the first 50, skip what I have" | **Download an entire playlist**, *Playlist / channel, incremental* |
+| Record a live stream | "record this live stream", "save it from the beginning", "it hasn't started yet" | **Record a live stream**, *Bilibili live* |
+| Authenticate a source | "it says login required", "use my cookies" | **Download with cookies**, **Authenticated sources** |
+| Recover a broken download | "it fails with 403", "it stalls", "429 too many requests" | **Troubleshooting**, *Flaky network / long file* |
+| Site suddenly stops working | "it worked last week", "no video formats found" | **Tool is out of date** |
 
-Also use it when a download must be scoped, resumed, or rate-limited rather than run naively.
+Also use it when a download must be scoped, resumed, or rate-limited rather than run naively — `--playlist-items`, `-c`, `--retries`, `--sleep-interval`, and `-N` are covered under **Best Practices by Use Case**.
 
 **Out of scope:** media that already exists on disk (converting, trimming, re-encoding, remuxing). Point those requests to the `ffmpeg` skill instead.
 
 ## Core Workflow
 
-### 1. Establish the target
+### 1. Classify the request
 
-Pin down, before running anything:
+Map the request onto one row of **When to use** and one operation in **Common Operations**. Pin down, before running anything:
 
-- **Deliverable** — video, audio, subtitles, metadata only, or a whole playlist.
-- **Constraints the user named** — format, resolution, audio bitrate, subtitle language, output directory.
+- **Deliverable** — video, audio, subtitles, live chat, live stream, or a whole playlist.
+- **Constraints the user named** — resolution or codec ceiling, audio codec and bitrate, subtitle languages, output directory.
 
 Ask a follow-up only when an unclear choice would materially change the result — for example, which resolution to use when the user said "best quality" but the source offers several, or whether a URL that holds both a playlist and a video ID means the whole list or just that entry.
 
-### 2. Inspect before selecting
+### 2. Check prerequisites first
+
+Verify what the operation depends on **before** fetching anything, so a missing tool fails in a second instead of after a large transfer:
+
+- `ffmpeg -version` whenever the command merges streams, embeds subtitles, or extracts audio (`-f "bv*+ba/b"`, `--embed-subs`, `-x`).
+- `yt-dlp --version`, then `yt-dlp -U`, when a site is reported broken or the failure looks like extractor breakage.
+
+### 3. Inspect only when the answer depends on it
 
 - Run `yt-dlp -F "URL"` when the user names a quality or format, or when the available options are unclear.
 - Run `yt-dlp --flat-playlist -F "URL"` first for playlists, so a large collection is counted without full extraction.
+- Prefer `-S` over `-f`: sorting states a preference and still yields a file, while an exact ID fails when the stream is absent. Use `-f` only with an ID copied from `-F` output or a pattern already vetted in **Best Practices by Use Case** (e.g. `bv*+ba/b`, `best[ext=flv]/best`).
 - Keep yt-dlp's default selection when no format is requested rather than guessing at one.
 
-### 3. Pick the operation
+### 4. Build the command
 
-Choose the matching command from **Common Operations** and add only the options the request needs:
+Start from the matching command in **Common Operations**, then overlay the rows of **Best Practices by Use Case** that the request needs and nothing more:
 
-- A playlist or channel is downloaded in full **only** when the user asks for it.
-- If the content needs a logged-in session, follow the cookie procedure and treat the cookie data as a secret.
+- **Repeatability** — `--download-archive archive.txt` for playlists, channels, and restarted live recordings.
+- **Scope** — `--playlist-items` to bound a run; a playlist or channel is downloaded in full **only** when the user asks for it.
+- **Robustness** — `-c --retries 10 --fragment-retries 10 --socket-timeout 30` for flaky networks and long files.
+- **Politeness** — `--sleep-interval`, `--sleep-requests`, and a lower `-N` when a site throttles.
+- **Authentication** — follow the cookie procedure, treat the cookie data as a secret, and delete the cookie files in the same turn the download ends.
 
-### 4. Execute
+### 5. Execute
 
-Run the command with the URL quoted, preserving the requested output location and options. If a requested format turns out to be unavailable, report the alternatives from the format list instead of silently substituting a different one.
+Run the command with the URL quoted, preserving the requested output location and options. If a requested format turns out to be unavailable, report the alternatives from the `-F` list instead of silently substituting a different one, and do not widen the scope of the run.
 
-### 5. Verify and report
+### 6. Verify and report
 
-Confirm the expected files exist and match the request in name, container, resolution, and subtitles. Report the output location plus anything yt-dlp printed as an error. Never claim success when the download failed or only part of a playlist was retrieved.
+Confirm the expected files exist and match the request in name, container, resolution, and subtitles — including sidecar files for subtitles or live chat. Treat leftover `.part`/`.ytdl` files as an incomplete download, not a success, and note whether `--download-archive` recorded the finished items so a re-run resumes rather than repeats. Report the output location plus anything yt-dlp printed as an error. Never claim success when the download failed or only part of a playlist was retrieved.
 
 ## Common Operations
 
