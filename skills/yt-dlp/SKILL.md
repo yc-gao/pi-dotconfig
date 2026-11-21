@@ -18,17 +18,17 @@ Trigger this skill when the request involves a **network media URL** — YouTube
 
 | Request | Typical phrasing | Covered by |
 | --- | --- | --- |
+| Inspect before downloading | "what resolutions exist", "how many parts in this playlist" | **Inspect available formats** |
 | Fetch a single video | "download this video", "save this clip" | **Download video** |
 | Cap quality without failing | "not above 1080p", "prefer h264 so it plays anywhere" | **Sort instead of pinning** |
 | Fetch audio only | "rip the audio", "get the MP3", "keep the original codec" | **Extract audio**, *Lossless / Compatible audio* |
 | Fetch subtitles or chat | "grab the subtitles", "embed zh and en subs", "save the chat log" | **Download subtitles**, *Bilingual subtitles*, **Record a live stream** |
-| Inspect before downloading | "what resolutions exist", "how many parts in this playlist" | **Inspect available formats** |
 | Batch-download a collection | "get the whole playlist/channel", "just the first 50, skip what I have" | **Download an entire playlist**, *Playlist / channel, incremental* |
 | Record a live stream | "record this live stream", "save it from the beginning", "it hasn't started yet" | **Record a live stream**, *Bilibili live* |
 | Authenticate a source | "it says login required", "use my cookies" | **Download with cookies**, **Authenticated sources** |
 | Recover a broken download | "it fails with 403", "it stalls", "429 too many requests" | **Troubleshooting**, *Flaky network / long file* |
 | Site suddenly stops working | "it worked last week", "no video formats found" | **Tool is out of date** |
-
+<!-- gogoga-table: {"w":[null,286],"wide":1} -->
 Also use it when a download must be scoped, resumed, or rate-limited rather than run naively — `--playlist-items`, `-c`, `--retries`, `--sleep-interval`, and `-N` are covered under **Best Practices by Use Case**.
 
 **Out of scope:** media that already exists on disk (converting, trimming, re-encoding, remuxing). Point those requests to the `ffmpeg` skill instead.
