@@ -222,14 +222,70 @@ If a different filename or location was used, delete those exact paths instead. 
 
 ## Troubleshooting
 
-Diagnose a failure from yt-dlp's own message before changing options, and re-run with `-v` when the cause is not obvious. Add `--no-warnings` only when warnings are burying the error.
+Diagnose before retrying. Read the error yt-dlp printed, match it in the table below, apply the fix, and retry the original command — do not escalate to cookies or format overrides that the error does not justify.
 
-An HTTP 403 Forbidden, or a note that the content is only available to logged-in users, means the session is missing or stale. Follow the cookie procedure with a freshly copied `Cookie` header; expired cookies reproduce the same 403.
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `HTTP Error 403: Forbidden` | Stale signature/token, missing `Referer`, or expired session | Update yt-dlp, retry once, then add `--cookies cookies.txt` (see **Download with cookies**) |
+| `Sign in to confirm you're not a bot` | YouTube bot check on the client | Retry with cookies from a logged-in browser |
+| `Requested format is not available` | Format ID absent for this video or region | Re-run `yt-dlp -F "URL"` and pick from the list |
+| `No video formats found` / `Unsupported URL` | Site changed, or URL is not a media page | Update yt-dlp; otherwise report the URL as unsupported |
+| `ffmpeg not found` / postprocessing failed | FFmpeg missing, or wrong stream combined | Verify `ffmpeg -version`, re-run with `-f "bv*+ba/b"` |
+| `HTTP Error 429` / `Too Many Requests` | Rate limiting or throttling | Add `--sleep-requests 1 --sleep-interval 5` and lower `-N` |
+| `Private video` / `Login required` | Content needs an authenticated session | Use the cookie procedure; if it still fails, report that the account lacks access |
+| Geo-restricted or `not available in your country` | Region lock | Report it; do not fake a location |
+| Download stalls or times out | Network instability or slow fragments | Add `--retries 10 --fragment-retries 10` and `--socket-timeout 30` |
+| Playlist stops early | One entry failed while others succeeded | Re-run with `--download-archive archive.txt` to skip finished items and retry only the failures |
 
-"Requested format is not available" means the selector in `-f` matched nothing for this URL. Run `yt-dlp -F "URL"` and pick a format ID or selector that the list actually contains, then tell the user which alternative was used.
+### HTTP 403 Forbidden
 
-A merge error, or the output landing as separate `.f137.mp4` and `.f140.m4a` files, means FFmpeg is missing or not on `PATH`. Install it, or restrict the command to a single combined format such as `-f b` to avoid the merge step.
+1. **Confirm the URL itself works.** Re-run `yt-dlp -F "URL"`. A 403 on `-F` is an access problem, not a format problem.
+2. **Add the referer** when the CDN rejects direct requests:
 
-A download that stops partway can usually be resumed with the same output template by adding `--continue`. For repeated failures from one host, slow down the requests with `--sleep-requests 1 --retries 10` rather than re-running immediately.
+```bash
+yt-dlp --referer "URL" -o "%(title)s.%(ext)s" "URL"
+```
 
-When a URL expands to far more items than the user expected, stop and confirm the scope before downloading. Use `--flat-playlist -F "URL"` to count the entries and `--playlist-items 1-10` to bound a large collection.
+3. **Use a logged-in session** if steps 1–2 fail: follow **Download with cookies**, run the download, then delete the cookie files immediately as that procedure requires.
+
+4. **Discard partial files** left by the failed attempt before retrying, so the retry does not resume a corrupt fragment:
+
+```bash
+rm -f *.part *.ytdl
+```
+
+### Format and merging problems
+
+- Always resolve a format complaint from the actual `yt-dlp -F "URL"` output; never invent a format ID.
+- When separate streams fail to merge, fall back to the best combined format:
+
+```bash
+-f "b"
+```
+
+- If FFmpeg is genuinely unavailable, download video and audio separately with `-f "bv"` and `-f "ba"`, or use `-f "b"` to skip merging, and tell the user the result is not the highest quality.
+
+### Slow or throttled downloads
+
+```bash
+yt-dlp --concurrent-fragments 4 --limit-rate 5M \
+  --sleep-requests 1 --retries 10 --fragment-retries 10 \
+  -o "%(title)s.%(ext)s" "URL"
+```
+
+Lower `--concurrent-fragments` (or `-N`) when a site throttles parallel requests, and raise `--sleep-interval` between playlist entries.
+
+### Tool is out of date
+
+Most extractor breakage is fixed by an update. Check and update before deeper debugging:
+
+```bash
+yt-dlp -U
+```
+
+If `-U` is unavailable (package-managed install), update through the user's package manager instead and report which method was used.
+
+### Reporting a failure
+
+When none of the above works, report: the exact command used, the error line yt-dlp printed, the `yt-dlp --version` output, and what was already tried. Do not silently fall back to a lower quality, a different site, or a partial playlist, and never claim a download succeeded unless the expected files exist.
+
