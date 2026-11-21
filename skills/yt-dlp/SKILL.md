@@ -8,27 +8,20 @@ description: >
 
 # yt-dlp
 
-Use yt-dlp to download and inspect network media from more than 1,800 supported sites. This skill covers format selection and sorting, audio extraction, subtitle and live-chat download, playlist scope, live DVR recording, authentication, and recovery from common download failures.
-
-Keep each operation to one `yt-dlp` invocation with the media URL quoted. Prefer explicit constraints and yt-dlp's sorting options over assumed format IDs; a format list or flat playlist list is the source of truth when exact choices matter. Commands that merge streams, embed subtitles, or extract audio require FFmpeg on `PATH`, so run `ffmpeg -version` first. This skill does not process media already on disk; use the `ffmpeg` skill for conversion, trimming, remuxing, or re-encoding.
+Download and inspect network media from 1,800+ sites with yt-dlp — formats and sorting, audio extraction, subtitles and live chat, playlists, live DVR, cookies, and failure recovery — running one invocation per operation with the URL quoted, stating preferences instead of guessing format IDs, requiring FFmpeg for merging, embedding, and audio extraction, and leaving media already on disk to the `ffmpeg` skill.
 
 ## When to use
 
-Trigger this skill when the request involves a **network media URL** — YouTube, Bilibili, TikTok, X, Instagram, or any of the other ~1,800 supported sites. Each row names a request pattern and where it is answered, so triggers and commands never drift apart (**bold** = section, *italic* = row in **Best Practices by Use Case**).
+Trigger this skill when the request involves a **network media URL** — YouTube, Bilibili, TikTok, X, Instagram, or any of the other ~1,800 supported sites — and the user wants to:
 
-| Request | Typical phrasing | Covered by |
-| --- | --- | --- |
-| Inspect before downloading | "what resolutions exist", "how many parts in this playlist" | **Inspect available formats** |
-| Fetch a single video | "download this video", "save this clip" | **Download video** |
-| Fetch audio only | "rip the audio", "get the MP3", "keep the original codec" | **Extract audio**, *Lossless / Compatible audio* |
-| Fetch subtitles or chat | "grab the subtitles", "embed zh and en subs", "save the chat log" | **Download subtitles**, *Bilingual subtitles*, **Record a live stream** |
-| Batch-download a collection | "get the whole playlist/channel", "just the first 50, skip what I have" | **Download an entire playlist**, *Playlist / channel, incremental* |
-| Record a live stream | "record this live stream", "save it from the beginning", "it hasn't started yet" | **Record a live stream**, *Bilibili live* |
-| Authenticate a source | "it says login required", "use my cookies" | **Download with cookies**, **Authenticated sources** |
-| Recover a broken download | "it fails with 403", "it stalls", "429 too many requests" | **Troubleshooting**, *Flaky network / long file* |
-| Site suddenly stops working | "it worked last week", "no video formats found" | **Tool is out of date** |
-<!-- gogoga-table: {"w":[null,286],"wide":1} -->
-Also use it when a download must be scoped, resumed, or rate-limited rather than run naively — `--playlist-items`, `-c`, `--retries`, `--sleep-interval`, and `-N` are covered under **Best Practices by Use Case**.
+- Inspect formats or playlist contents before downloading
+- Download a video, or extract its audio
+- Fetch subtitles or a live-chat log
+- Download part or all of a playlist, channel, or other collection
+- Record a live stream, including one that has not started yet
+- Reach content behind a login, using cookies
+- Recover a download that failed or was throttled
+- Investigate a site that suddenly stopped working
 
 **Out of scope:** media that already exists on disk (converting, trimming, re-encoding, remuxing). Point those requests to the `ffmpeg` skill instead.
 
@@ -36,48 +29,33 @@ Also use it when a download must be scoped, resumed, or rate-limited rather than
 
 ### 1. Classify the request
 
-Map the request onto one row of **When to use** and one operation in **Common Operations**. Pin down, before running anything:
+Identify what to deliver (video, audio, subtitles, live chat, live stream, or a collection) and the constraints the user named (quality or codec, audio format, subtitle languages, output location). Ask a follow-up only when an unclear choice would materially change the result — for example a URL that could mean either the whole playlist or a single entry.
 
-- **Deliverable** — video, audio, subtitles, live chat, live stream, or a whole playlist.
-- **Constraints the user named** — resolution or codec ceiling, audio codec and bitrate, subtitle languages, output directory.
+### 2. Check prerequisites
 
-Ask a follow-up only when an unclear choice would materially change the result — for example, which resolution to use when the user said "best quality" but the source offers several, or whether a URL that holds both a playlist and a video ID means the whole list or just that entry.
-
-### 2. Check prerequisites first
-
-Verify what the operation depends on **before** fetching anything, so a missing tool fails in a second instead of after a large transfer:
-
-- `ffmpeg -version` whenever the command merges streams, embeds subtitles, or extracts audio (`-f "bv*+ba/b"`, `--embed-subs`, `-x`).
-- `yt-dlp --version`, then `yt-dlp -U`, when a site is reported broken or the failure looks like extractor breakage.
+Verify what the operation depends on before transferring anything, so a missing tool fails immediately instead of after a large download.
 
 ### 3. Inspect only when the answer depends on it
 
-- Run `yt-dlp -F "URL"` when the user names a quality or format, or when the available options are unclear.
-- Run `yt-dlp --flat-playlist -F "URL"` first for playlists, so a large collection is counted without full extraction.
-- Prefer `-S` over `-f`: sorting states a preference and still yields a file, while an exact ID fails when the stream is absent. Use `-f` only with an ID copied from `-F` output or a pattern already vetted in **Best Practices by Use Case** (e.g. `bv*+ba/b`, `best[ext=flv]/best`).
-- Keep yt-dlp's default selection when no format is requested rather than guessing at one.
+When a quality or format is named, or the available options are unclear, look up the source's real capabilities first. Prefer stating a preference over pinning an exact option, keep the tool's default when nothing was requested, and bound a large collection before extracting everything in it.
 
 ### 4. Build the command
 
-Start from the matching command in **Common Operations**, then overlay the rows of **Best Practices by Use Case** that the request needs and nothing more:
-
-- **Repeatability** — `--download-archive archive.txt` for playlists, channels, and restarted live recordings.
-- **Scope** — `--playlist-items` to bound a run; a playlist or channel is downloaded in full **only** when the user asks for it.
-- **Robustness** — `-c --retries 10 --fragment-retries 10 --socket-timeout 30` for flaky networks and long files.
-- **Politeness** — `--sleep-interval`, `--sleep-requests`, and a lower `-N` when a site throttles.
-- **Authentication** — follow the cookie procedure, treat the cookie data as a secret, and delete the cookie files in the same turn the download ends.
+Start from the matching operation in **Common Operations**, then apply the site-specific preferences in **Best Practices by Use Case** when the request targets one of those sites: repeatability, scope, robustness, politeness, and authentication. A playlist or channel is downloaded in full only when the user asks for it, and cookie data is treated as a secret.
 
 ### 5. Execute
 
-Run the command with the URL quoted, preserving the requested output location and options. If a requested format turns out to be unavailable, report the alternatives from the `-F` list instead of silently substituting a different one, and do not widen the scope of the run.
+Run a single invocation with the URL quoted, keeping the requested output location and options. If a requested choice turns out to be unavailable, report the alternatives instead of silently substituting one, and do not widen the scope of the run.
 
 ### 6. Verify and report
 
-Confirm the expected files exist and match the request in name, container, resolution, and subtitles — including sidecar files for subtitles or live chat. Treat leftover `.part`/`.ytdl` files as an incomplete download, not a success, and note whether `--download-archive` recorded the finished items so a re-run resumes rather than repeats. Report the output location plus anything yt-dlp printed as an error. Never claim success when the download failed or only part of a playlist was retrieved.
+Confirm the expected files exist and match the request, and treat leftover partial files as an incomplete download rather than a success. Report the output location plus anything the tool printed as an error. Never claim success when the download failed or only part of a collection was retrieved.
 
 ## Common Operations
 
 Each operation below is a single command to adapt to the request: keep the URL quoted, keep `-o` pointing at the location the user asked for, and add options only when the request needs them.
+
+Options are introduced under each command as `-s, --long-name`. Both spellings are equivalent, and most boolean flags have a `--no-` form that restores the default. Text inside square brackets after an option name is an optional part of its argument, not literal input.
 
 ### Inspect available formats
 
@@ -92,6 +70,11 @@ For a playlist, list entries in flat mode without fully extracting metadata for 
 ```bash
 yt-dlp --flat-playlist -F "URL"
 ```
+
+**Options**
+
+- `-F, --list-formats` — print the format table (ID, extension, resolution, codecs, bitrate, size) and exit without downloading. Format IDs taken from this table are the only safe input for `-f`.
+- `--flat-playlist` — list entries without extracting each video's metadata, which is fast on large collections, but some fields are missing and no media is downloaded. The default, `--no-flat-playlist`, fully extracts every entry.
 
 ### Download video
 
@@ -109,6 +92,13 @@ yt-dlp -o "%(title)s.%(ext)s" \
   -f "bv*+ba/b" "URL"
 ```
 
+Rank formats by preference instead of pinning a format ID, so the run still yields the closest match when the top choice is missing:
+
+```bash
+yt-dlp -o "%(title)s.%(ext)s" \
+  -S "res:1080,codec:avc,ext:mp4" "URL"
+```
+
 Download all available automatically generated subtitles and embed them in the media file:
 
 ```bash
@@ -116,6 +106,15 @@ yt-dlp -o "%(title)s.%(ext)s" \
   --write-auto-subs --sub-langs all --embed-subs \
   "URL"
 ```
+
+**Options**
+
+- `-o, --output [TYPES:]TEMPLATE` — filename template. Fields such as `%(title)s`, `%(id)s`, `%(ext)s`, `%(playlist)s`, and `%(upload_date)s` are filled from metadata; keep `%(ext)s` last so the real extension wins. Missing directories are created.
+- `-f, --format FORMAT` — selection expression, not a single ID. `bv*` is the best video that may include audio, `ba` the best audio, `+` merges the pair with FFmpeg, `/` provides a fallback, and `b` alone means the best combined stream.
+- `-S, --format-sort SORTORDER` — ordered sort keys, optionally capped (`res:1080`, `codec:avc`, `ext:mp4`). Sorting is a preference, so it still produces a file when the top choice is absent.
+- `--write-auto-subs` — write the auto-generated subtitle tracks; this does not include the creator's own tracks.
+- `--sub-langs LANGS` — languages to fetch: `all`, a comma-separated list, or patterns such as `zh.*,en.*`.
+- `--embed-subs` — mux the subtitle tracks into the media file, which only works for mp4, webm, and mkv output and requires FFmpeg.
 
 ### Download subtitles
 
@@ -127,6 +126,12 @@ yt-dlp -o "%(title)s.%(ext)s" \
   "URL"
 ```
 
+**Options**
+
+- `--write-subs` — save creator-provided subtitle tracks; add `--write-auto-subs` to include machine-generated ones.
+- `--sub-langs` — `all`, a comma-separated list, or patterns like `en.*,ja` to narrow what is fetched.
+- `--skip-download` — skip the media file and write only the auxiliary files such as subtitles, thumbnails, and metadata.
+
 ### Extract audio
 
 Extract the audio, convert it to MP3, and use yt-dlp's highest-quality setting (`0`):
@@ -136,6 +141,12 @@ yt-dlp -o "%(title)s.%(ext)s" \
   -x --audio-format mp3 --audio-quality 0 \
   "URL"
 ```
+
+**Options**
+
+- `-x, --extract-audio` — post-process the download into an audio-only file; requires FFmpeg and ffprobe.
+- `--audio-format FORMAT` — target codec: `best` keeps the source codec without re-encoding, while `mp3`, `m4a`, `opus`, `flac`, and `wav` re-encode.
+- `--audio-quality QUALITY` — `0` is best and `10` worst for VBR targets, or give an explicit bitrate such as `192K`; the default is `5`.
 
 ### Download an entire playlist
 
@@ -158,43 +169,26 @@ yt-dlp -o "%(playlist)s/%(title)s.%(ext)s" \
   "URL"
 ```
 
+**Options**
+
+- `--yes-playlist` / `--no-playlist` — decide which scope applies when a URL refers to both a video and a playlist.
+- `--download-archive FILE` — record the IDs of finished items and skip them on later runs; deleting the file allows a re-download.
+- `-I, --playlist-items ITEM_SPEC` — comma-separated positions and ranges written `START:STOP:STEP`, with negative indices counting from the end (for example `1:3,7,-5::2`).
+
 ### Record a live stream
 
-The live URL is recorded immediately:
+Capture a live stream into a single file until it ends, polling every 30–300 seconds for a scheduled stream to start, and keeping the run restartable through `archive.txt`. The first command also saves the live chat as a subtitle file next to the recording, so drop `--write-subs --sub-langs live_chat` when the chat is not wanted:
 
 ```bash
 yt-dlp -o "%(title)s.%(ext)s" \
-  "URL"
-```
-
-If the stream has not started yet, poll it periodically until it becomes available. The range `30-300` means to wait 30 seconds for the first poll and then increase the interval up to 300 seconds:
-
-```bash
-yt-dlp -o "%(title)s.%(ext)s" \
+  --download-archive archive.txt \
   --wait-for-video 30-300 \
-  "URL"
-```
-
-When the platform provides the stream's replay/DVR buffer, combine `--live-from-start` with `--wait-for-video` to begin waiting before the stream starts and keep the recording from the beginning. This is only supported by extractors that expose live DVR data:
-
-```bash
-yt-dlp -o "%(title)s.%(ext)s" \
-  --wait-for-video 30-300 \
-  --live-from-start \
-  "URL"
-```
-
-To keep a separate live-chat log alongside the recording, use YouTube's `live_chat` subtitle track. Downloaded chat data is stored as a subtitle file:
-
-```bash
-yt-dlp -o "%(title)s.%(ext)s" \
-  --live-from-start \
   --write-subs \
   --sub-langs live_chat \
   "URL"
 ```
 
-For longer recordings, add `--download-archive archive.txt` to avoid recording the same live video again if the command is restarted:
+Record a stream that is already in flight from the beginning of the platform's DVR buffer:
 
 ```bash
 yt-dlp -o "%(title)s.%(ext)s" \
@@ -202,6 +196,16 @@ yt-dlp -o "%(title)s.%(ext)s" \
   --live-from-start \
   "URL"
 ```
+
+**Options**
+
+- `--wait-for-video MIN[-MAX]` — poll for a scheduled stream, waiting `MIN` seconds between attempts and backing off to `MAX`; a single value fixes the interval. The command otherwise gives up immediately on a room that is offline. Leave it out when the stream is already live, or the command waits unnecessarily.
+- `--live-from-start` — record from the beginning of the platform's DVR buffer instead of the current moment. It is experimental and limited to a few extractors (YouTube, Twitch, TVer, mellow-fan); on any other site yt-dlp warns and falls back to recording from the current moment, so check the log line before trusting the output.
+- `--write-subs` with `--sub-langs live_chat` — save the live chat as a subtitle file next to the recording; on busy streams it grows continuously and can outgrow the video.
+- `--download-archive FILE` — keep long recordings restartable by skipping a video that is already recorded.
+- Stopping with Ctrl-C ends the recording: a live capture cannot be resumed, so the file is complete only when yt-dlp exits on its own. Delete any leftover `.part` file before starting over.
+
+The recording runs in the foreground and prints progress until the stream ends. Announce the output path before starting it, and report the resulting file size and duration when it exits.
 
 ### Download with cookies
 
@@ -232,113 +236,42 @@ rm -f cookies.txt cookie-header.txt
 
 If a different filename or location was used, delete those exact paths instead. Do not leave cookie files around for a retry: if a retry is needed, repeat the whole procedure with a freshly copied `Cookie` header. Never display either file's contents.
 
+**Options**
+
+- `--cookies FILE` — read cookies from a Netscape-format file and write the updated jar back to it, so the file is both input and state.
+
 ## Best Practices by Use Case
 
-Field-tested flag combinations, one row per recurring request. Adapt the URL and output path; keep the pattern.
+Field-tested flag combinations for the sites where yt-dlp's defaults are not enough. Adapt the URL and output path; keep the pattern.
 
-| Use case | Pattern | Why it works |
+| Site | Pattern | Why it works |
 | --- | --- | --- |
 | Bilibili live | `-f "best[ext=flv]/best"` | Live endpoints often expose one container; pinning FLV avoids a bad pick, `/best` keeps it working when FLV is absent |
 | YouTube live / long stream | `--live-from-start --download-archive archive.txt` | Records the DVR buffer from the beginning and makes a restart resume instead of duplicating |
-| Quality ceiling without guessing | `-S "res:1080,codec:avc" -f "bv*+ba/b"` | Sorting downgrades gracefully instead of failing on a missing format ID |
-| Playlist / channel, incremental | `--download-archive archive.txt --playlist-items 1:50 --sleep-interval 2` | Archive skips finished items, `--playlist-items` bounds the run, sleep reduces throttling |
-| Lossless audio | `-x --audio-format best` | Keeps the source codec, no re-encode, fastest |
-| Compatible audio | `-x --audio-format mp3 --audio-quality 0` | One broadly playable file, highest quality yt-dlp can produce for that codec |
-| Bilingual subtitles | `--write-subs --write-auto-subs --sub-langs "zh.*,en.*" --embed-subs` | Explicit languages avoid downloading all 40+ tracks; embedding needs FFmpeg |
-| Flaky network / long file | `-c --retries 10 --fragment-retries 10 --socket-timeout 30` | Resumes partial files and retries fragments instead of starting over |
-
-### Live stream example
-
-The canonical form for a Bilibili live room:
-
-```bash
-yt-dlp -f "best[ext=flv]/best" -o "%(title)s.%(ext)s" \
-  "https://live.bilibili.com/4629447"
-```
-
-Add `--wait-for-video 30-300` when the room is offline, and `--download-archive archive.txt` when the command may be restarted mid-recording. See **Record a live stream** for the full option set.
-
-### Sort instead of pinning
-
-`-f "best[height<=1080]"` fails when no stream matches. `-S` expresses a preference and still yields a file:
-
-```bash
-yt-dlp -S "res:1080,codec:avc" -f "bv*+ba/b" \
-  --merge-output-format mp4 -o "%(title)s.%(ext)s" "URL"
-```
-
-Use `-f` only when the user named an exact format ID from `-F` output.
-
-### Authenticated sources
-
-For X, Instagram, private or members-only videos, cookies replace the session only — keep the same format, subtitle, and output flags. Follow **Download with cookies**, then delete the cookie files as soon as the download exits.
 
 ## Troubleshooting
 
-Diagnose before retrying. Read the error yt-dlp printed, match it in the table below, apply the fix, and retry the original command — do not escalate to cookies or format overrides that the error does not justify.
+Match the error line yt-dlp printed to one entry below, apply that entry's fix, and retry the original command once. Fix only what the error names, and work through the entries in order instead of jumping to cookies or a different format.
 
-| Symptom | Likely cause | Fix |
-| --- | --- | --- |
-| `HTTP Error 403: Forbidden` | Stale signature/token, missing `Referer`, or expired session | Update yt-dlp, retry once, then add `--cookies cookies.txt` (see **Download with cookies**) |
-| `Sign in to confirm you're not a bot` | YouTube bot check on the client | Retry with cookies from a logged-in browser |
-| `Requested format is not available` | Format ID absent for this video or region | Re-run `yt-dlp -F "URL"` and pick from the list |
-| `No video formats found` / `Unsupported URL` | Site changed, or URL is not a media page | Update yt-dlp; otherwise report the URL as unsupported |
-| `ffmpeg not found` / postprocessing failed | FFmpeg missing, or wrong stream combined | Verify `ffmpeg -version`, re-run with `-f "bv*+ba/b"` |
-| `HTTP Error 429` / `Too Many Requests` | Rate limiting or throttling | Add `--sleep-requests 1 --sleep-interval 5` and lower `-N` |
-| `Private video` / `Login required` | Content needs an authenticated session | Use the cookie procedure; if it still fails, report that the account lacks access |
-| Geo-restricted or `not available in your country` | Region lock | Report it; do not fake a location |
-| Download stalls or times out | Network instability or slow fragments | Add `--retries 10 --fragment-retries 10` and `--socket-timeout 30` |
-| Playlist stops early | One entry failed while others succeeded | Re-run with `--download-archive archive.txt` to skip finished items and retry only the failures |
+1. **`yt-dlp: command not found`** — not installed. `brew install yt-dlp`, or `python3 -m pip install -U yt-dlp`; confirm with `yt-dlp --version`.
+2. **`ffmpeg is not installed` / postprocessing failed** — merging, embedding, or audio extraction needs FFmpeg. Install it (`brew install ffmpeg`), confirm with `ffmpeg -version`, and retry; if it stays unavailable, use `-f "b"` to skip merging and tell the user the result is not the highest quality.
+3. **Anything else on a site that used to work** — the extractor is usually stale. Run `yt-dlp -U` first; if the install is package-managed and `-U` refuses, update through `brew` or `pip` and say which was used, then retry.
+4. **`HTTP Error 403: Forbidden`** — stale signature, missing `Referer`, or an expired session. Update yt-dlp and retry once, then add `--referer "URL"`, then fall back to **Download with cookies**. Clear leftovers from the failed attempt first: `rm -f *.part *.ytdl`.
+5. **`HTTP Error 429: Too Many Requests`** — rate limited. Slow the run down with `--sleep-requests 1 --sleep-interval 5 -N 2` and retry later rather than immediately.
+6. **`Sign in to confirm you're not a bot` / `Sign in to confirm your age`** — bot or age gate. Use **Download with cookies** once; repeated anonymous retries make it worse.
+7. **`Private video` / `Login required` / members-only message** — the content needs an authenticated session. Use **Download with cookies**; if it still fails, report that the account lacks access instead of retrying.
+8. **`This video is not available in your country`** — region lock. Report it; never fake a location or reach for a proxy to work around it.
+9. **`Video unavailable` / `has been removed` / `Unsupported URL` / `No video formats found`** — the content is gone, or the URL is not a media page. Update yt-dlp once, then report the URL as unsupported; no command fixes this.
+10. **`Requested format is not available`** — that ID does not exist for this video. Re-run `yt-dlp -F "URL"` and pick from the real list, or drop to `-f "bv*+ba/b"`; never invent a format ID.
+11. **Stalls, `Read timed out`, `Unable to download fragment`** — network instability or throttling. Retry with `--retries 10 --fragment-retries 10 --socket-timeout 30 --concurrent-fragments 1`, and lower `-N` when the site throttles parallel requests.
+12. **`SSL: CERTIFICATE_VERIFY_FAILED` / DNS or proxy errors** — the network path is broken. Re-run through the user's proxy with `--proxy URL`; use `--no-check-certificates` only if the user accepts the risk.
+13. **`[Errno 28] No space left on device`** — the target volume is full. Free space or point `-o` at another volume, and report the shortfall; never present a truncated file as a complete download.
+14. **Destination already exists** — a stale or partial file is in the way. Remove it and retry; `--force-overwrites` overwrites, `--no-overwrites` keeps the existing file and skips the item.
+15. **Playlist stops after a few entries** — one entry failed while others succeeded. Re-run the same command with `--download-archive archive.txt` to skip finished items, retry only the failures, and list the entries that still fail.
+16. **Live: `This live event will begin in ...` / `Premieres in ...`** — the room is not live yet. Add `--wait-for-video 30-300`; if `--live-from-start` printed a fallback warning, the recording starts from the current moment, so report that.
+17. **Interrupted recording (Ctrl-C) or leftover `.part` file** — a live capture cannot be resumed. Delete the `.part` file and start a new recording, stating how much was lost.
+18. **Cookie loading fails (`Failed to decrypt`, empty cookie jar)** — the browser profile is locked or the header was rejected. Re-copy the `Cookie` header and repeat **Download with cookies**; delete the cookie files afterwards as that procedure requires.
 
-### HTTP 403 Forbidden
+### When no entry fixes it
 
-1. **Confirm the URL itself works.** Re-run `yt-dlp -F "URL"`. A 403 on `-F` is an access problem, not a format problem.
-2. **Add the referer** when the CDN rejects direct requests:
-
-```bash
-yt-dlp --referer "URL" -o "%(title)s.%(ext)s" "URL"
-```
-
-3. **Use a logged-in session** if steps 1–2 fail: follow **Download with cookies**, run the download, then delete the cookie files immediately as that procedure requires.
-
-4. **Discard partial files** left by the failed attempt before retrying, so the retry does not resume a corrupt fragment:
-
-```bash
-rm -f *.part *.ytdl
-```
-
-### Format and merging problems
-
-- Always resolve a format complaint from the actual `yt-dlp -F "URL"` output; never invent a format ID.
-- When separate streams fail to merge, fall back to the best combined format:
-
-```bash
--f "b"
-```
-
-- If FFmpeg is genuinely unavailable, download video and audio separately with `-f "bv"` and `-f "ba"`, or use `-f "b"` to skip merging, and tell the user the result is not the highest quality.
-
-### Slow or throttled downloads
-
-```bash
-yt-dlp --concurrent-fragments 4 --limit-rate 5M \
-  --sleep-requests 1 --retries 10 --fragment-retries 10 \
-  -o "%(title)s.%(ext)s" "URL"
-```
-
-Lower `--concurrent-fragments` (or `-N`) when a site throttles parallel requests, and raise `--sleep-interval` between playlist entries.
-
-### Tool is out of date
-
-Most extractor breakage is fixed by an update. Check and update before deeper debugging:
-
-```bash
-yt-dlp -U
-```
-
-If `-U` is unavailable (package-managed install), update through the user's package manager instead and report which method was used.
-
-### Reporting a failure
-
-When none of the above works, report: the exact command used, the error line yt-dlp printed, the `yt-dlp --version` output, and what was already tried. Do not silently fall back to a lower quality, a different site, or a partial playlist, and never claim a download succeeded unless the expected files exist.
-
+Stop and report the failure instead of trying more commands: the exact command, the error line yt-dlp printed, the `yt-dlp --version` output, and which entries above were already tried. Never claim a download succeeded unless the expected files exist and are complete, and never substitute a different site, a lower quality, or a partial playlist without saying so.
