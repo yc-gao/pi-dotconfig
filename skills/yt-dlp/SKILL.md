@@ -142,7 +142,7 @@ To download only selected playlist entries, use `--playlist-items`. Separate ind
 yt-dlp -o "%(playlist)s/%(title)s.%(ext)s" \
   --yes-playlist \
   --download-archive archive.txt \
-  --playlist-items 1,3,5-7 \
+  --playlist-items 1,3,5:7 \
   "URL"
 ```
 
@@ -229,7 +229,7 @@ Field-tested flag combinations, one row per recurring request. Adapt the URL and
 | Bilibili live | `-f "best[ext=flv]/best"` | Live endpoints often expose one container; pinning FLV avoids a bad pick, `/best` keeps it working when FLV is absent |
 | YouTube live / long stream | `--live-from-start --download-archive archive.txt` | Records the DVR buffer from the beginning and makes a restart resume instead of duplicating |
 | Quality ceiling without guessing | `-S "res:1080,codec:avc" -f "bv*+ba/b"` | Sorting downgrades gracefully instead of failing on a missing format ID |
-| Playlist / channel, incremental | `--download-archive archive.txt -I 1:50 --sleep-interval 2` | Archive skips finished items, `-I` bounds the run, sleep reduces throttling |
+| Playlist / channel, incremental | `--download-archive archive.txt --playlist-items 1:50 --sleep-interval 2` | Archive skips finished items, `--playlist-items` bounds the run, sleep reduces throttling |
 | Lossless audio | `-x --audio-format best` | Keeps the source codec, no re-encode, fastest |
 | Compatible audio | `-x --audio-format mp3 --audio-quality 0` | One broadly playable file, highest quality yt-dlp can produce for that codec |
 | Bilingual subtitles | `--write-subs --write-auto-subs --sub-langs "zh.*,en.*" --embed-subs` | Explicit languages avoid downloading all 40+ tracks; embedding needs FFmpeg |
