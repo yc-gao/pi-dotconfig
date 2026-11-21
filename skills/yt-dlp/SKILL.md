@@ -8,22 +8,23 @@ description: >
 
 # yt-dlp
 
-Download and inspect network media from 1,800+ sites with yt-dlp — formats and sorting, audio extraction, subtitles and live chat, playlists, live DVR, cookies, and failure recovery — running one invocation per operation with the URL quoted, stating preferences instead of guessing format IDs, requiring FFmpeg for merging, embedding, and audio extraction, and leaving media already on disk to the `ffmpeg` skill.
+Download video, audio, subtitles, live chat, and live streams from YouTube, Bilibili, TikTok, X, Instagram, and 1,800+ other sites with `yt-dlp` — including whole playlists and channels, live capture from the start of the DVR buffer, and content that needs a logged-in session — while leaving conversion, trimming, and remuxing of media already on disk to the `ffmpeg` skill.
 
 ## When to use
 
-Trigger this skill when the request involves a **network media URL** — YouTube, Bilibili, TikTok, X, Instagram, or any of the other ~1,800 supported sites — and the user wants to:
+Trigger this skill when the request starts from a **media page URL** and the user wants to:
 
-- Inspect formats or playlist contents before downloading
-- Download a video, or extract its audio
-- Fetch subtitles or a live-chat log
-- Download part or all of a playlist, channel, or other collection
-- Record a live stream, including one that has not started yet
-- Reach content behind a login, using cookies
-- Recover a download that failed or was throttled
-- Investigate a site that suddenly stopped working
+- Inspect available formats, or list playlist/channel entries, before downloading
+- Download video, with a quality, codec, or size preference
+- Extract audio, either lossless or converted to MP3/M4A/Opus
+- Fetch subtitles or live chat, optionally embedding them in the file
+- Download a whole or partial playlist or channel, incrementally across runs
+- Record a live stream, including from the start of the DVR buffer
+- Access members-only, private, or login-required content with cookies
+- Recover a download that stalled or failed with HTTP 403/429
+- Update `yt-dlp` when a site suddenly stops working
 
-**Out of scope:** media that already exists on disk (converting, trimming, re-encoding, remuxing). Point those requests to the `ffmpeg` skill instead.
+**Out of scope:** converting, trimming, remuxing, or re-encoding media that already exists on disk, and inspecting local files. Point those to the `ffmpeg` skill; `yt-dlp` uses FFmpeg only as its merge and post-processing backend.
 
 ## Core Workflow
 
@@ -51,7 +52,7 @@ Start from the matching operation in **Common Operations**, then apply the site-
 
 ### 5. Execute
 
-Run a single invocation with the URL quoted, keeping the requested output location and options. If a requested choice turns out to be unavailable, report the alternatives instead of silently substituting one, and do not widen the scope of the run.
+Run a single invocation, keeping the requested output location and options. If a requested choice turns out to be unavailable, report the alternatives instead of silently substituting one, and do not widen the scope of the run.
 
 ### 6. Verify and report
 
@@ -95,14 +96,16 @@ Select the best available video and audio streams, falling back to the best comb
 
 ```bash
 yt-dlp -o "%(title)s.%(ext)s" \
-  -f "bv*+ba/b" "URL"
+  -f "bv*+ba/b" \
+  "URL"
 ```
 
 Rank formats by preference instead of pinning a format ID, so the run still yields the closest match when the top choice is missing:
 
 ```bash
 yt-dlp -o "%(title)s.%(ext)s" \
-  -S "res:1080,codec:avc,ext:mp4" "URL"
+  -S "res:1080,codec:avc,ext:mp4" \
+  "URL"
 ```
 
 Download all available automatically generated subtitles and embed them in the media file:
@@ -128,14 +131,13 @@ Download all available creator-provided subtitles as separate files without down
 
 ```bash
 yt-dlp -o "%(title)s.%(ext)s" \
-  --write-subs --sub-langs all --skip-download \
+  --write-auto-subs --write-subs --sub-langs all --skip-download \
   "URL"
 ```
 
 **Options**
 
 - `--write-subs` — save creator-provided subtitle tracks; add `--write-auto-subs` to include machine-generated ones.
-- `--sub-langs` — `all`, a comma-separated list, or patterns like `en.*,ja` to narrow what is fetched.
 - `--skip-download` — skip the media file and write only the auxiliary files such as subtitles, thumbnails, and metadata.
 
 ### Extract audio
@@ -189,8 +191,7 @@ Capture a live stream into a single file until it ends, polling every 30–300 s
 yt-dlp -o "%(title)s.%(ext)s" \
   --download-archive archive.txt \
   --wait-for-video 30-300 \
-  --write-subs \
-  --sub-langs live_chat \
+  --write-subs --sub-langs live_chat \
   "URL"
 ```
 
@@ -259,24 +260,17 @@ Field-tested flag combinations for the sites where yt-dlp's defaults are not eno
 
 Match the error line yt-dlp printed to one entry below, apply that entry's fix, and retry the original command once. Fix only what the error names, and work through the entries in order instead of jumping to cookies or a different format.
 
-1. **`yt-dlp: command not found`** — not installed. `brew install yt-dlp`, or `python3 -m pip install -U yt-dlp`; confirm with `yt-dlp --version`.
-2. **`ffmpeg is not installed` / postprocessing failed** — merging, embedding, or audio extraction needs FFmpeg. Install it (`brew install ffmpeg`), confirm with `ffmpeg -version`, and retry; if it stays unavailable, use `-f "b"` to skip merging and tell the user the result is not the highest quality.
-3. **Anything else on a site that used to work** — the extractor is usually stale. Run `yt-dlp -U` first; if the install is package-managed and `-U` refuses, update through `brew` or `pip` and say which was used, then retry.
-4. **`HTTP Error 403: Forbidden`** — stale signature, missing `Referer`, or an expired session. Update yt-dlp and retry once, then add `--referer "URL"`, then fall back to **Download with cookies**. Clear leftovers from the failed attempt first: `rm -f *.part *.ytdl`.
-5. **`HTTP Error 429: Too Many Requests`** — rate limited. Slow the run down with `--sleep-requests 1 --sleep-interval 5 -N 2` and retry later rather than immediately.
-6. **`Sign in to confirm you're not a bot` / `Sign in to confirm your age`** — bot or age gate. Use **Download with cookies** once; repeated anonymous retries make it worse.
-7. **`Private video` / `Login required` / members-only message** — the content needs an authenticated session. Use **Download with cookies**; if it still fails, report that the account lacks access instead of retrying.
-8. **`This video is not available in your country`** — region lock. Report it; never fake a location or reach for a proxy to work around it.
-9. **`Video unavailable` / `has been removed` / `Unsupported URL` / `No video formats found`** — the content is gone, or the URL is not a media page. Update yt-dlp once, then report the URL as unsupported; no command fixes this.
-10. **`Requested format is not available`** — that ID does not exist for this video. Re-run `yt-dlp -F "URL"` and pick from the real list, or drop to `-f "bv*+ba/b"`; never invent a format ID.
-11. **Stalls, `Read timed out`, `Unable to download fragment`** — network instability or throttling. Retry with `--retries 10 --fragment-retries 10 --socket-timeout 30 --concurrent-fragments 1`, and lower `-N` when the site throttles parallel requests.
-12. **`SSL: CERTIFICATE_VERIFY_FAILED` / DNS or proxy errors** — the network path is broken. Re-run through the user's proxy with `--proxy URL`; use `--no-check-certificates` only if the user accepts the risk.
-13. **`[Errno 28] No space left on device`** — the target volume is full. Free space or point `-o` at another volume, and report the shortfall; never present a truncated file as a complete download.
-14. **Destination already exists** — a stale or partial file is in the way. Remove it and retry; `--force-overwrites` overwrites, `--no-overwrites` keeps the existing file and skips the item.
-15. **Playlist stops after a few entries** — one entry failed while others succeeded. Re-run the same command with `--download-archive archive.txt` to skip finished items, retry only the failures, and list the entries that still fail.
-16. **Live: `This live event will begin in ...` / `Premieres in ...`** — the room is not live yet. Add `--wait-for-video 30-300`; if `--live-from-start` printed a fallback warning, the recording starts from the current moment, so report that.
-17. **Interrupted recording (Ctrl-C) or leftover `.part` file** — a live capture cannot be resumed. Delete the `.part` file and start a new recording, stating how much was lost.
-18. **Cookie loading fails (`Failed to decrypt`, empty cookie jar)** — the browser profile is locked or the header was rejected. Re-copy the `Cookie` header and repeat **Download with cookies**; delete the cookie files afterwards as that procedure requires.
+- **`HTTP Error 403: Forbidden`** — stale signature, missing `Referer`, or an expired session. Update yt-dlp and retry once, then add `--referer "URL"`, then fall back to **Download with cookies**. Clear leftovers from the failed attempt first: `rm -f *.part *.ytdl`.
+- **`Sign in to confirm you're not a bot` / `Sign in to confirm your age`** — bot or age gate. Use **Download with cookies** once; repeated anonymous retries make it worse.
+- **`Private video` / `Login required` / members-only message** — the content needs an authenticated session. Use **Download with cookies**; if it still fails, report that the account lacks access instead of retrying.
+- **`HTTP Error 429: Too Many Requests`** — rate limited. Slow the run down with `--sleep-requests 1 --sleep-interval 5 -N 2` and retry later rather than immediately.
+- **`Requested format is not available`** — that ID does not exist for this video. Re-run `yt-dlp -F "URL"` and pick from the real list, or drop to `-f "bv*+ba/b"`; never invent a format ID.
+- **Stalls, `Read timed out`, `Unable to download fragment`** — network instability or throttling. Retry with `--retries 10 --fragment-retries 10 --socket-timeout 30 --concurrent-fragments 1`, and lower `-N` when the site throttles parallel requests.
+- **Destination already exists** — a stale or partial file is in the way. Remove it and retry; `--force-overwrites` overwrites, `--no-overwrites` keeps the existing file and skips the item.
+- **Playlist stops after a few entries** — one entry failed while others succeeded. Re-run the same command with `--download-archive archive.txt` to skip finished items, retry only the failures, and list the entries that still fail.
+- **Live: `This live event will begin in ...` / `Premieres in ...`** — the room is not live yet. Add `--wait-for-video 30-300`; if `--live-from-start` printed a fallback warning, the recording starts from the current moment, so report that.
+- **Interrupted recording (Ctrl-C) or leftover `.part` file** — a live capture cannot be resumed. Delete the `.part` file and start a new recording, stating how much was lost.
+
 
 ### When no entry fixes it
 
