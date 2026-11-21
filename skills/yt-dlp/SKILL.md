@@ -23,6 +23,7 @@ Trigger this skill when the request involves a **network media URL** — YouTube
 | Fetch subtitles | "grab the subtitles", "hardcode/embed subs" |
 | Inspect before downloading | "what resolutions exist", "how many parts in this playlist" |
 | Batch-download a collection | "get the whole playlist/channel" |
+| Record a live stream | "record this live stream", "save a livestream from the start" |
 | Authenticate a source | "it says login required", "use my cookies" |
 | Diagnose a failed download | "it fails with 403", "format not available" |
 
@@ -142,6 +143,51 @@ yt-dlp -o "%(playlist)s/%(title)s.%(ext)s" \
   --yes-playlist \
   --download-archive archive.txt \
   --playlist-items 1,3,5-7 \
+  "URL"
+```
+
+### Record a live stream
+
+The live URL is recorded immediately:
+
+```bash
+yt-dlp -o "%(title)s.%(ext)s" \
+  "URL"
+```
+
+If the stream has not started yet, poll it periodically until it becomes available. The range `30-300` means to wait 30 seconds for the first poll and then increase the interval up to 300 seconds:
+
+```bash
+yt-dlp -o "%(title)s.%(ext)s" \
+  --wait-for-video 30-300 \
+  "URL"
+```
+
+When the platform provides the stream's replay/DVR buffer, combine `--live-from-start` with `--wait-for-video` to begin waiting before the stream starts and keep the recording from the beginning. This is only supported by extractors that expose live DVR data:
+
+```bash
+yt-dlp -o "%(title)s.%(ext)s" \
+  --wait-for-video 30-300 \
+  --live-from-start \
+  "URL"
+```
+
+To keep a separate live-chat log alongside the recording, use YouTube's `live_chat` subtitle track. Downloaded chat data is stored as a subtitle file:
+
+```bash
+yt-dlp -o "%(title)s.%(ext)s" \
+  --live-from-start \
+  --write-subs \
+  --sub-langs live_chat \
+  "URL"
+```
+
+For longer recordings, add `--download-archive archive.txt` to avoid recording the same live video again if the command is restarted:
+
+```bash
+yt-dlp -o "%(title)s.%(ext)s" \
+  --download-archive archive.txt \
+  --live-from-start \
   "URL"
 ```
 
