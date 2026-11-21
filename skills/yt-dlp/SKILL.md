@@ -33,7 +33,13 @@ Identify what to deliver (video, audio, subtitles, live chat, live stream, or a 
 
 ### 2. Check prerequisites
 
-Verify what the operation depends on before transferring anything, so a missing tool fails immediately instead of after a large download.
+Before any operation, check that both `yt-dlp` and `ffmpeg` are available:
+
+```bash
+which yt-dlp && which ffmpeg || exit 1
+```
+
+If either command is missing, stop immediately without inspecting or downloading media.
 
 ### 3. Inspect only when the answer depends on it
 
