@@ -20,7 +20,6 @@ Trigger this skill when the request involves a **network media URL** — YouTube
 | --- | --- | --- |
 | Inspect before downloading | "what resolutions exist", "how many parts in this playlist" | **Inspect available formats** |
 | Fetch a single video | "download this video", "save this clip" | **Download video** |
-| Cap quality without failing | "not above 1080p", "prefer h264 so it plays anywhere" | **Sort instead of pinning** |
 | Fetch audio only | "rip the audio", "get the MP3", "keep the original codec" | **Extract audio**, *Lossless / Compatible audio* |
 | Fetch subtitles or chat | "grab the subtitles", "embed zh and en subs", "save the chat log" | **Download subtitles**, *Bilingual subtitles*, **Record a live stream** |
 | Batch-download a collection | "get the whole playlist/channel", "just the first 50, skip what I have" | **Download an entire playlist**, *Playlist / channel, incremental* |
