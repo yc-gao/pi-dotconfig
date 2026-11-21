@@ -135,6 +135,16 @@ yt-dlp -o "%(playlist)s/%(title)s.%(ext)s" \
   "URL"
 ```
 
+To download only selected playlist entries, use `--playlist-items`. Separate individual positions with commas and specify inclusive ranges with a hyphen:
+
+```bash
+yt-dlp -o "%(playlist)s/%(title)s.%(ext)s" \
+  --yes-playlist \
+  --download-archive archive.txt \
+  --playlist-items 1,3,5-7 \
+  "URL"
+```
+
 ### Download with cookies
 
 For content that requires authentication, handle the user's cookie data as a secret. Never echo it or place it directly in a command or log.
