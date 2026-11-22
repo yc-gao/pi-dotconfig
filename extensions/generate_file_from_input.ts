@@ -31,14 +31,43 @@ const paramsSchema = Type.Object({
 type Params = Static<typeof paramsSchema>;
 
 interface Details {
-    displayPath: string;
     path: string;
-    content: string | null;
+    absolutePath?: string;
+    content?: string;
     state: "ok" | "cancelled" | "error";
 }
 
-function result(text: string, details: Details): AgentToolResult<Details> {
-    return { content: [{ type: "text", text }], details };
+function buildOkResult(text: string, path: string, absolutePath: string, content: string): AgentToolResult<Details> {
+    return {
+        content: [{ type: "text", text }],
+        details: {
+            path,
+            absolutePath,
+            content,
+            state: "ok"
+        }
+    }
+}
+
+function buildCancelledResult(text: string, path: string): AgentToolResult<Details> {
+    return {
+        content: [{ type: "text", text }],
+        details: {
+            path,
+            state: "cancelled"
+        }
+    }
+}
+
+function buildErrorResult(text: string, path: string): AgentToolResult<Details> {
+    return {
+        content: [{ type: "text", text }],
+        details: {
+            path,
+            state: "error"
+        },
+        isError: true
+    }
 }
 
 function normalizePath(cwd: string, raw: string): string {
@@ -55,29 +84,22 @@ async function execute(
     ctx: ExtensionToolContext,
 ): Promise<AgentToolResult<Details>> {
     if (!ctx.hasUI) {
-        throw new Error(`Error: this tool needs an interactive session to prompt, but the current mode is "${ctx.mode}".`);
+        return buildErrorResult(
+            `Error: this tool needs an interactive session to prompt, but the current mode is "${ctx.mode}".`,
+            params.path
+        )
     }
 
     const displayPath = params.path
-    const absolutePath = normalizePath(ctx.cwd, params.path);
-
-    const base: Details = {
-        displayPath,
-        path: absolutePath,
-        content: null,
-        state: "error",
-    };
+    const absolutePath = normalizePath(ctx.cwd, displayPath);
 
     if (signal?.aborted) {
-        return result("Cancelled before asking the user.", { ...base, state: "cancelled" });
+        return buildCancelledResult("Cancelled before asking the user.", displayPath)
     }
 
     const answer = await ctx.ui.input(`Content for ${displayPath}:`, params.placeholder, { signal });
     if (answer === undefined) {
-        return result("User cancelled the input, no file was written.", {
-            ...base,
-            state: "cancelled",
-        });
+        return buildCancelledResult("User cancelled the input, no file was written.", displayPath)
     }
 
 
@@ -86,12 +108,7 @@ async function execute(
         await writeFile(absolutePath, answer, "utf8");
     });
 
-
-    return result(`Created ${displayPath} from user input.`, {
-        ...base,
-        content: answer,
-        state: "ok",
-    });
+    return buildOkResult(`Created ${displayPath} from user input.`, displayPath, absolutePath, answer);
 }
 
 export default function generateFileFromInput(pi: ExtensionAPI) {
