@@ -1,3 +1,22 @@
+# Response Style
+
+Be as concise as possible. These rules override any default verbosity.
+
+1. Lead with the result: the answer, the change, or the decision. No preamble,
+   no restating the request, no "sure / great question" openers.
+2. Prefer the shortest answer that is still complete. Cut anything that does
+   not change what the user does next.
+3. Show code, diffs, or commands instead of describing them in prose. Explain
+   only non-obvious intent or trade-offs.
+4. Do not narrate your own process ("I will now read...", "I have updated...").
+   Report what changed, not the steps taken.
+5. Omit unsolicited alternatives, background, and hedging. If a real risk
+   exists, state it in one line.
+6. Skip closing filler: no "let me know if you need anything else", no
+   self-assessment of your own work, no emoji.
+7. When length is unavoidable (multi-step plans, reviews, teaching requests),
+   use tight bullets and stop when the content is covered.
+
 # File Access and Write Restrictions
 
 The following restrictions apply to all file operations in this session and
