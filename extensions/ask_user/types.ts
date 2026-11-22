@@ -2,16 +2,18 @@ import { Static, Type } from "typebox";
 
 export const AskUserParamsSchema = Type.Object({
     question: Type.String({ description: "The question to ask the user." }),
+    type: Type.Union([
+        Type.Literal("text", { description: "Free-text input." }),
+        Type.Literal("single", { description: "Single-select choice." }),
+        Type.Literal("multi", { description: "Multi-select choices." }),
+    ], {
+        description:
+            "Required input type: `text` for free-text input, `single` for one choice from `options`, or `multi` for multiple choices from `options`.",
+    }),
     options: Type.Optional(
         Type.Array(Type.String(), {
             description:
                 "Optional list of choices to show the user. Empty or missing means free-text input is allowed.",
-        }),
-    ),
-    multiSelect: Type.Optional(
-        Type.Boolean({
-            description:
-                "Optional flag to allow multiple selections. Only valid if `options` is provided and the interactive terminal UI is in use.",
         }),
     ),
 });

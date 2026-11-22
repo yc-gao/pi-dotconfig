@@ -28,7 +28,7 @@ function buildErrorResult(text: string, params: AskUserParams) {
 async function executeFreeText(
     params: AskUserParams,
     ctx: ExtensionToolContext,
-    signal: AbortSignal,
+    signal?: AbortSignal,
 ): Promise<AgentToolResult<AskUserDetails>> {
     const answer = await ctx.ui.input(params.question, undefined, { signal });
     if (answer === undefined) {
@@ -40,9 +40,9 @@ async function executeFreeText(
 async function executeSelect(
     params: AskUserParams,
     ctx: ExtensionToolContext,
-    signal: AbortSignal,
+    signal?: AbortSignal,
 ): Promise<AgentToolResult<AskUserDetails>> {
-    const answer = await ctx.ui.select(params.question, params.options ?? [], { signal })
+    const answer = await ctx.ui.select(params.question, params.options as string[], { signal })
     if (answer === undefined) {
         return buildCancelledResult(params);
     }
@@ -52,25 +52,11 @@ async function executeSelect(
 async function executeMultiSelect(
     params: AskUserParams,
     ctx: ExtensionToolContext,
-    signal: AbortSignal,
+    signal?: AbortSignal,
 ): Promise<AgentToolResult<AskUserDetails>> {
-    if (signal.aborted) {
-        return buildResult("User cancelled.", { params, state: 'cancelled' })
-    }
-
-    let onAbort: (() => void) | undefined;
     const answers = await ctx.ui.custom<string[] | undefined>((tui, theme, keybindings, done) => {
-        let finished = false;
-        const finish = (result: string[] | undefined) => {
-            if (finished) return;
-            finished = true;
-            if (onAbort) signal.removeEventListener("abort", onAbort);
-            done(result);
-        }
-
         const container = new Container();
         container.addChild(new Text(theme.fg("accent", params.question), 0, 1));
-
         const selectList = new SelectList(params.options ?? [],
             {
                 selectedItem: (text) => theme.fg("accent", text),
@@ -78,14 +64,9 @@ async function executeMultiSelect(
                 dim: (text) => theme.fg("dim", text),
             },
             keybindings)
-        selectList.onSubmit = (selected: string[]) => { finish(selected) }
-        selectList.onCancel = () => { finish(undefined) }
+        selectList.onSubmit = (selected: string[]) => { done(selected) }
+        selectList.onCancel = () => { done(undefined) }
         container.addChild(selectList);
-
-        onAbort = () => { finish(undefined) };
-        signal.addEventListener("abort", onAbort, { once: true });
-        // 补逸漏：若在预检查之后、注册监听之前已经中止，abort 事件不会再触发
-        if (signal.aborted) finish(undefined);
 
         return {
             render(width: number): string[] {
@@ -99,8 +80,6 @@ async function executeMultiSelect(
         }
     });
 
-    if (onAbort) signal.removeEventListener("abort", onAbort);
-
     if (answers === undefined) {
         return buildCancelledResult(params);
     }
@@ -111,32 +90,39 @@ export default function (pi: ExtensionAPI) {
     pi.registerTool({
         name: "ask_user",
         label: "Ask User",
-        description:
-            "Ask the user a question and return their answer. Supports free-text input (no options), single-select, and multi-select. Reports cancelled or empty answers distinctly.",
-        promptSnippet:
-            "Ask the user a question in the interactive UI: free-text, single-select, or multi-select",
-        promptGuidelines: [
-            "Use ask_user when you need a decision, missing detail, or clarification that only the user can provide and guessing would risk wasted work.",
-            "Use ask_user instead of assuming between materially different options; pass `options` with short, self-explanatory labels so the user can answer with one keystroke.",
-            "When calling ask_user, ask one focused question at a time and do not repeat questions the user has already answered in this conversation.",
-            "Treat Ask User results starting with `User cancelled.` as the user declining to answer; do not immediately re-ask the same question.",
-        ],
         executionMode: "sequential",
+        description:
+            "Ask the user a question and wait for their answer. Supports `text` free-text input, `single` one choice from `options`, and `multi` multiple choices from `options` (terminal UI only). Returns a cancelled state when the user dismisses the prompt.",
+        promptSnippet:
+            "Ask the user a question (free-text, single-select, or multi-select) and wait for the answer",
+        promptGuidelines: [
+            "Use ask_user when a decision, preference, or missing detail must come from the human and cannot be inferred from the repository or the conversation.",
+            "When calling ask_user, pass `type: \"single\"` or `type: \"multi\"` with an `options` list instead of asking a numbered-options question in plain text.",
+            "Use ask_user with `type: \"single\"` or `type: \"multi\"` rather than guessing when a command would be destructive or ambiguous; ask_user results report `state` as `ok`, `cancelled`, or `error` separately, so handle cancellation instead of assuming an answer.",
+            "Use generate_file_from_input instead of ask_user when the user wants a file whose content they will type themselves; do not guess or invent that content.",
+        ],
         parameters: AskUserParamsSchema,
 
-        async execute(toolCallId, params: AskUserParams, signal: AbortSignal, onUpdate, ctx: ExtensionToolContext): Promise<AgentToolResult<AskUserDetails>> {
+        async execute(_toolCallId, params: AskUserParams, signal: AbortSignal | undefined, _onUpdate, ctx: ExtensionToolContext): Promise<AgentToolResult<AskUserDetails>> {
             if (!ctx.hasUI) {
                 return buildErrorResult("The 'ask_user' tool requires an interactive UI to be available.", params)
             }
-
-            if (ctx.mode !== "tui" && params?.multiSelect) {
+            if (params.type === "multi" && ctx.mode !== "tui") {
                 return buildErrorResult("The 'ask_user' tool only supports multi-select when the interactive terminal UI is in use.", params)
             }
+            if (params.type !== "text" && !params.options?.length) {
+                return buildErrorResult("The 'ask_user' tool requires `options` when `type` is `single` or `multi`.", params)
+            }
 
-            if (!params.options?.length) {
+            if (signal?.aborted) {
+                return buildResult("User cancelled.", { params, state: 'cancelled' })
+            }
+
+
+            if (params.type === "text") {
                 return await executeFreeText(params, ctx, signal);
             }
-            if (!params?.multiSelect) {
+            if (params.type === "single") {
                 return await executeSelect(params, ctx, signal);
             }
             return await executeMultiSelect(params, ctx, signal);
