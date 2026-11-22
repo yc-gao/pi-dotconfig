@@ -1,5 +1,5 @@
 {
-    "name": "pi_extensions",
+    "name": "pi_package",
     "version": "1.0.0",
     "type": "module",
     "devDependencies": {
