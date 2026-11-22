@@ -1,0 +1,9 @@
+{
+    "name": "pi_extensions",
+    "version": "1.0.0",
+    "type": "module",
+    "devDependencies": {
+        "@earendil-works/pi-coding-agent": "^1.5.2",
+        "@earendil-works/pi-tui": "^1.5.2"
+    }
+}
