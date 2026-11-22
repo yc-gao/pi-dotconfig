@@ -54,6 +54,7 @@ async function executeMultiSelect(
     ctx: ExtensionToolContext,
     signal?: AbortSignal,
 ): Promise<AgentToolResult<AskUserDetails>> {
+    // TODO: support signal
     const answers = await ctx.ui.custom<string[] | undefined>((tui, theme, keybindings, done) => {
         const container = new Container();
         container.addChild(new Text(theme.fg("accent", params.question), 0, 1));
