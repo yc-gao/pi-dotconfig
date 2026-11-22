@@ -17,7 +17,7 @@ export const AskUserParamsSchema = Type.Object({
 });
 export type AskUserParams = Static<typeof AskUserParamsSchema>;
 
-export type State = 'ok' | 'cancelled';
+export type State = 'ok' | 'cancelled' | 'error';
 
 export interface AskUserDetails {
     params: AskUserParams;

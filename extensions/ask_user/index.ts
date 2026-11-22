@@ -13,6 +13,18 @@ function buildResult(text: string, details: AskUserDetails): AgentToolResult<Ask
     }
 }
 
+function buildOkResult(text: string, params: AskUserParams, answers: string[]) {
+    return buildResult(text, { params, state: 'ok', answers });
+}
+
+function buildCancelledResult(params: AskUserParams) {
+    return buildResult("User cancelled.", { params, state: 'cancelled' })
+}
+
+function buildErrorResult(text: string, params: AskUserParams) {
+    return { ...buildResult(text, { params, state: 'error' }), isError: true }
+}
+
 async function executeFreeText(
     params: AskUserParams,
     ctx: ExtensionToolContext,
@@ -20,9 +32,9 @@ async function executeFreeText(
 ): Promise<AgentToolResult<AskUserDetails>> {
     const answer = await ctx.ui.input(params.question, undefined, { signal });
     if (answer === undefined) {
-        return buildResult("User cancelled.", { params, state: 'cancelled' })
+        return buildCancelledResult(params);
     }
-    return buildResult(`User answered: ${answer.trim()}`, { params, state: 'ok', answers: [answer] });
+    return buildOkResult(`User answered: ${answer.trim()}`, params, [answer])
 }
 
 async function executeSelect(
@@ -32,9 +44,9 @@ async function executeSelect(
 ): Promise<AgentToolResult<AskUserDetails>> {
     const answer = await ctx.ui.select(params.question, params.options ?? [], { signal })
     if (answer === undefined) {
-        return buildResult("User cancelled.", { params, state: 'cancelled' })
+        return buildCancelledResult(params);
     }
-    return buildResult(`User selected: ${answer}`, { params, state: 'ok', answers: [answer] });
+    return buildOkResult(`User selected: ${answer}`, params, [answer]);
 }
 
 async function executeMultiSelect(
@@ -90,9 +102,9 @@ async function executeMultiSelect(
     if (onAbort) signal.removeEventListener("abort", onAbort);
 
     if (answers === undefined) {
-        return buildResult("User cancelled.", { params, state: 'cancelled' })
+        return buildCancelledResult(params);
     }
-    return buildResult(`User selected:\n${answers.map((answer) => `- ${answer}`).join("\n")}`, { params, state: 'ok', answers });
+    return buildOkResult(`User selected:\n${answers.map((answer) => `- ${answer}`).join("\n")}`, params, answers);
 }
 
 export default function (pi: ExtensionAPI) {
@@ -114,11 +126,11 @@ export default function (pi: ExtensionAPI) {
 
         async execute(toolCallId, params: AskUserParams, signal: AbortSignal, onUpdate, ctx: ExtensionToolContext): Promise<AgentToolResult<AskUserDetails>> {
             if (!ctx.hasUI) {
-                throw new Error("The 'ask_user' tool requires an interactive UI to be available.");
+                return buildErrorResult("The 'ask_user' tool requires an interactive UI to be available.", params)
             }
 
             if (ctx.mode !== "tui" && params?.multiSelect) {
-                throw new Error("The 'ask_user' tool only supports multi-select when the interactive terminal UI is in use.");
+                return buildErrorResult("The 'ask_user' tool only supports multi-select when the interactive terminal UI is in use.", params)
             }
 
             if (!params.options?.length) {
