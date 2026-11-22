@@ -59,17 +59,6 @@ function buildCancelledResult(text: string, path: string): AgentToolResult<Detai
     }
 }
 
-function buildErrorResult(text: string, path: string): AgentToolResult<Details> {
-    return {
-        content: [{ type: "text", text }],
-        details: {
-            path,
-            state: "error"
-        },
-        isError: true
-    }
-}
-
 function normalizePath(cwd: string, raw: string): string {
     const cleaned = raw.trim().replace(/^@/, "");
     const absolute = isAbsolute(cleaned) ? cleaned : resolve(cwd, cleaned);
@@ -84,10 +73,7 @@ async function execute(
     ctx: ExtensionToolContext,
 ): Promise<AgentToolResult<Details>> {
     if (!ctx.hasUI) {
-        return buildErrorResult(
-            `Error: this tool needs an interactive session to prompt, but the current mode is "${ctx.mode}".`,
-            params.path
-        )
+        throw new Error(`Error: this tool needs an interactive session to prompt, but the current mode is "${ctx.mode}".`)
     }
 
     const displayPath = params.path

@@ -21,10 +21,6 @@ function buildCancelledResult(params: AskUserParams) {
     return buildResult("User cancelled.", { params, state: 'cancelled' })
 }
 
-function buildErrorResult(text: string, params: AskUserParams) {
-    return { ...buildResult(text, { params, state: 'error' }), isError: true }
-}
-
 async function executeFreeText(
     params: AskUserParams,
     ctx: ExtensionToolContext,
@@ -106,13 +102,13 @@ export default function (pi: ExtensionAPI) {
 
         async execute(_toolCallId, params: AskUserParams, signal: AbortSignal | undefined, _onUpdate, ctx: ExtensionToolContext): Promise<AgentToolResult<AskUserDetails>> {
             if (!ctx.hasUI) {
-                return buildErrorResult("The 'ask_user' tool requires an interactive UI to be available.", params)
+                throw new Error("The 'ask_user' tool requires an interactive UI to be available.")
             }
             if (params.type === "multi" && ctx.mode !== "tui") {
-                return buildErrorResult("The 'ask_user' tool only supports multi-select when the interactive terminal UI is in use.", params)
+                throw new Error("The 'ask_user' tool only supports multi-select when the interactive terminal UI is in use.")
             }
             if (params.type !== "text" && !params.options?.length) {
-                return buildErrorResult("The 'ask_user' tool requires `options` when `type` is `single` or `multi`.", params)
+                throw new Error("The 'ask_user' tool requires `options` when `type` is `single` or `multi`.")
             }
 
             if (signal?.aborted) {
