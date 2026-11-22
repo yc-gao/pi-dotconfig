@@ -1,6 +1,7 @@
 ---
 name: playwright-cli
 description: Automate browser interactions, test web pages and work with Playwright tests.
+ref: https://github.com/microsoft/playwright-cli/tree/main/skills/playwright-cli
 ---
 
 # Browser Automation with playwright-cli
