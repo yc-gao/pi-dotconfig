@@ -127,6 +127,14 @@ yt-dlp -o "%(title)s.%(ext)s" \
 
 ### Download subtitles
 
+If the language codes are unknown, list the available tracks first:
+
+```bash
+yt-dlp --list-subs "URL"
+```
+
+`--list-subs` is a preview only: it prints the creator and automatic tracks with their language codes, formats, and names, and downloads nothing. Use the codes it prints in `--sub-langs`; run it again after changing `--sub-langs` or the site options if the output looks incomplete.
+
 Download all available creator-provided subtitles as separate files without downloading the media:
 
 ```bash
@@ -137,6 +145,7 @@ yt-dlp -o "%(title)s.%(ext)s" \
 
 **Options**
 
+- `--list-subs` — print the available subtitle tracks and exit without downloading anything; a preview step, not a download.
 - `--write-subs` — save creator-provided subtitle tracks; add `--write-auto-subs` to include machine-generated ones.
 - `--skip-download` — skip the media file and write only the auxiliary files such as subtitles, thumbnails, and metadata.
 
