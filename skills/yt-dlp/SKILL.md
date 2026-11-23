@@ -225,10 +225,21 @@ The recording runs in the foreground and prints progress until the stream ends. 
 
 ### Download with cookies
 
-For content that requires authentication, handle the user's cookie data as a secret. Never echo it or place it directly in a command or log.
+Some content only resolves inside an authenticated session, and yt-dlp can only see that session through cookies. There are two ways to hand them over; which one to use is the user's decision, not yours.
 
-1. **Collect the cookie header.** Use `generate_file_from_input` to save `Cookie` request header to a private temporary file such as `cookie-header.txt`. If the cookie domain is unclear, ask the user to confirm it.
-2. **Convert it to Netscape format.** Pass the header file to the converter on standard input. Replace `.example.com` with the actual cookie domain; do not use a placeholder domain. Store the generated file in a private location:
+| Method | What yt-dlp receives | Use it when |
+| --- | --- | --- |
+| A. Paste the `Cookie` header | The cookies the user copied out, for one site | Default. The user wants to expose nothing beyond that site |
+| B. `--cookies-from-browser` | Every cookie in the browser profile the user names | The user cannot copy a header, or one run spans several sites |
+
+**Ask before touching any cookie source.** Cookies are the user's live session and unlock everything the account can reach, so state which error made authentication necessary and use `ask_user` (type `single`) to let the user pick A or B. Never choose for them, never open a browser profile or request a header before their answer, and never switch methods on your own when the chosen one fails — stop and ask again. Whatever the method, treat cookie data as a secret: never echo it into a command line or a log.
+
+#### A. Paste the `Cookie` header
+
+The narrowest option: only what the user copies is exposed, and only for the site they copied from.
+
+1. **Collect the header.** Use `generate_file_from_input` to save the site's `Cookie` request header to a private temporary file such as `cookie-header.txt`. Ask the user to confirm the cookie domain if it is unclear.
+2. **Convert it to Netscape format.** Feed the header file to the converter on standard input, replacing `.example.com` with the real cookie domain rather than a placeholder, and write the result to a private location:
 
 ```bash
 # Run the converter shipped with this skill (scripts/cookies_from_string.py, resolved against this SKILL.md's directory).
@@ -238,23 +249,49 @@ python3 scripts/cookies_from_string.py \
   < cookie-header.txt
 ```
 
-3. **Use the converted file with yt-dlp:**
+3. **Pass the file to yt-dlp:**
 
 ```bash
 yt-dlp --cookies cookies.txt "URL"
 ```
 
-4. **Delete the cookie files as soon as the download ends.** This is mandatory, not optional cleanup. Once yt-dlp exits — success or failure — remove every cookie-related file this procedure created, in the same turn, and confirm the deletion to the user:
+4. **Delete the files the moment the run ends.** This is mandatory, not optional cleanup. Once yt-dlp exits — success or failure — remove every cookie file this procedure created in the same turn, delete the exact paths if they differ from the ones below, and confirm the deletion to the user. Never display either file's contents, and never keep them around for a retry: a retry means repeating the whole procedure with a freshly copied `Cookie` header.
 
 ```bash
 rm -f cookies.txt cookie-header.txt
 ```
 
-If a different filename or location was used, delete those exact paths instead. Do not leave cookie files around for a retry: if a retry is needed, repeat the whole procedure with a freshly copied `Cookie` header. Never display either file's contents.
+**Options**
+
+- `--cookies FILE` — read cookies from a Netscape-format file and write the refreshed jar back to that same file, so the file is both input and state. It carries only the cookies the user pasted, which is why this path stays scoped to one site.
+
+#### B. Use `--cookies-from-browser`
+
+Here yt-dlp decrypts the cookies directly from a browser profile, so nothing is written to disk and there is nothing to clean up afterwards. The trade-off is scope: the whole profile's cookie jar is read, not just one site's. State that before running it, and when the user has a profile they keep only for this site, use that one instead of their everyday browsing profile.
+
+1. **Confirm the source.** Ask which browser, and which profile or container, then pass exactly what the user names. Do not guess a profile and do not read a browser they did not choose.
+2. **Make sure that profile is signed in.** The session must already exist in that browser; a logged-out profile yields an empty jar and the same login wall as before.
+3. **Run yt-dlp with the browser specified:**
+
+```bash
+yt-dlp --cookies-from-browser firefox "URL"
+```
+
+```bash
+# Named Chromium profile, Firefox container, Chromium keyring on Linux
+yt-dlp --cookies-from-browser "chrome:Profile 2" "URL"
+yt-dlp --cookies-from-browser "firefox::work" "URL"
+yt-dlp --cookies-from-browser "chrome+gnomekeyring" "URL"
+```
+
+4. **Report what was used** — browser, profile, and container — so the user knows where the session came from. If the run still hits a login wall, report that the profile lacks access; do not quietly fall back to method A.
 
 **Options**
 
-- `--cookies FILE` — read cookies from a Netscape-format file and write the updated jar back to it, so the file is both input and state.
+- `--cookies-from-browser BROWSER[+KEYRING][:PROFILE][::CONTAINER]` — `BROWSER` is one of `brave`, `chrome`, `chromium`, `edge`, `firefox`, `opera`, `safari`, `vivaldi`, `whale`; `:PROFILE` names or paths a profile; `::CONTAINER` selects a Firefox container (`::none` for the default one); `+KEYRING` picks the Linux keyring used to decrypt Chromium cookies. Do not combine it with `--cookies` in the same command.
+- Chromium-family browsers may raise an OS Keychain or password prompt while decrypting. The user has to approve it — never work around the prompt or ask for the password.
+- If yt-dlp reports that the cookie database is locked or cannot be copied, quit the browser completely, background processes included, and retry.
+- Safari on macOS requires Full Disk Access for the terminal running yt-dlp. Report that requirement instead of attempting a workaround.
 
 ## Best Practices by Use Case
 
@@ -269,8 +306,8 @@ Field-tested flag combinations for the sites where yt-dlp's defaults are not eno
 
 Match the error line yt-dlp printed to one entry below, apply that entry's fix, and retry the original command once. Fix only what the error names, and work through the entries in order instead of jumping to cookies or a different format.
 
-- **`HTTP Error 403: Forbidden`** — stale signature, missing `Referer`, or an expired session. Update yt-dlp and retry once, then add `--referer "URL"`, then fall back to **Download with cookies**. Clear leftovers from the failed attempt first: `rm -f *.part *.ytdl`.
-- **`Sign in to confirm you're not a bot` / `Sign in to confirm your age`** — bot or age gate. Use **Download with cookies** once; repeated anonymous retries make it worse.
+- **`HTTP Error 403: Forbidden`** — stale signature, missing `Referer`, or an expired session. Update yt-dlp and retry once, then add `--referer "URL"`, then use **Download with cookies** (ask the user which method first). Clear leftovers from the failed attempt first: `rm -f *.part *.ytdl`.
+- **`Sign in to confirm you're not a bot` / `Sign in to confirm your age`** — bot or age gate. Use **Download with cookies** once (ask the user which method first); repeated anonymous retries make it worse.
 - **`Private video` / `Login required` / members-only message** — the content needs an authenticated session. Use **Download with cookies**; if it still fails, report that the account lacks access instead of retrying.
 - **`HTTP Error 429: Too Many Requests`** — rate limited. Slow the run down with `--sleep-requests 1 --sleep-interval 5 -N 2` and retry later rather than immediately.
 - **`Requested format is not available`** — that ID does not exist for this video. Re-run `yt-dlp -F "URL"` and pick from the real list, or drop to `-f "bv*+ba/b"`; never invent a format ID.
