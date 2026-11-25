@@ -17,6 +17,8 @@ Turns a development request into a reviewed change across four stages:
 
 Each stage ends with the user's explicit confirmation of its result, and the next stage starts only after that confirmation. What comes out is a change that matches what was agreed, is verified against stated criteria, distinguishes necessary fixes from optional improvements, and has been examined from several independent angles before it is accepted.
 
+Each stage writes its output in a fixed shape. The four templates live in `references/output-templates.md`; load it before writing the first gate message of a session.
+
 ## Workflow
 
 ### 1. Clarify
@@ -31,24 +33,7 @@ Before changing code, establish an outcome that can be implemented and verified.
    - Refactor or performance: behavior that must stay equivalent, how success is measured.
 4. **Confirm the shared understanding.** End clarification with one consolidated statement of what you understand: task type and goal, scope including what is out of scope, constraints and assumptions, acceptance criteria and how they will be verified, and the intended next step. Wait for explicit confirmation before going further; silence, partial agreement, or an implicit cue is not confirmation. If the user corrects you, revise, return to the relevant step above, and present the full summary again.
 
-    Use this template, translated into the user's language and filled with concrete content rather than restated questions:
-
-    ```markdown
-    **What I understand**
-
-    - Task type: <feature | bug | refactor | performance | explanation | other>
-    - Goal: <one or two plain sentences>
-    - In scope: <the specific changes or behaviors this task covers>
-    - Out of scope: <related things you will not touch>
-    - Constraints: <conventions, compatibility, files, APIs, or versions to respect>
-    - Assumptions: <defaults you are taking, or "none">
-    - Acceptance criteria: <observable conditions, each with how it will be verified>
-    - Next step: <the first action you intend to take>
-
-    Please confirm, or correct any line above.
-    ```
-
-    Keep every line short and concrete; write "none" instead of dropping a line, since an empty section is itself an assumption the user cannot see.
+    Use the Clarify template in `references/output-templates.md`, translated into the user's language and filled with concrete content rather than restated questions. Keep every line short and concrete, and write "none" instead of dropping a line, since an empty section is itself an assumption the user cannot see.
 
 Clarification ends when the task has an actionable outcome, a way to verify it, and the user's explicit confirmation of that understanding. If the request is already specific, skip questions but still present the full summary and wait.
 
@@ -70,36 +55,7 @@ Turn the confirmed outcome into small, independently verifiable tasks, then desi
 
 4. **Present the plan for approval.** Present all tasks and designs in one consolidated message, then wait for explicit approval. Silence, partial agreement, or "looks reasonable" without a clear go-ahead is not approval. If the user changes scope, task boundaries, or an approach, revise the affected tasks, re-check ordering and verification goals, and present the full plan again.
 
-    Use this template, translated into the user's language and filled with concrete content:
-
-    ```markdown
-    **Plan**
-
-    Tasks are ordered; "verify" is the check that closes each one.
-
-    | # | Task | Depends on | Verification goal |
-    |---|------|-----------|-------------------|
-    | 1 | <one-line task> | — | <command/test/observation → expected result> |
-    | 2 | <one-line task> | 1 | <...> |
-
-    **Task 1 — <title>**
-    - Change: <files, symbols, and the shape of the change>
-    - Approach: <how it works, in a few lines>
-    - Alternatives: <considered and rejected, with the reason; or "none">
-    - Risks: <what could break, and rollback; or "none">
-
-    **Task 2 — <title>**
-    - Change: ...
-    - Approach: ...
-    - Alternatives: ...
-    - Risks: ...
-
-    Out of scope for this plan: <what stays untouched>
-
-    Approve, or tell me which task or approach to change.
-    ```
-
-    Keep the table and per-task blocks short. Name real files and real commands; "add tests" and "refactor as needed" are neither a task nor a verification goal.
+    Use the Plan template in `references/output-templates.md`, translated into the user's language and filled with concrete content. Keep the table and per-task blocks short, and name real files and real commands; "add tests" and "refactor as needed" are neither a task nor a verification goal.
 
 Planning ends when every in-scope task has a verification goal and an approved design, and the user has explicitly approved the plan. Then implement one task at a time, in order, verifying each before starting the next.
 
@@ -117,19 +73,7 @@ Implement the approved plan one task at a time. The plan is the contract: code f
 
 5. **Report per task and keep state visible.** Report after each task using the template below, then continue unless the user asked to review each task individually. If the outcome changes later tasks — a contract moved, a task became unnecessary, a new task is required — update the plan and confirm with the user before entering the affected tasks. If the repo is a git worktree and the user has not said otherwise, leave one commit per verified task using the repository's message convention.
 
-    Use this template, translated into the user's language and filled with concrete content:
-
-    ```markdown
-    **Task <n> — <title>: <done | blocked>**
-
-    - Changed: <files and symbols touched>
-    - Verification: `<command>` → <actual result; expected result>
-    - Regressions: <surrounding checks run and their result; or "none run, because ...">
-    - Follow-ups: <out-of-scope findings; or "none">
-    - Next: <task n+1 title>
-    ```
-
-    Keep it to the lines above; lead with `blocked` and the failing check rather than a narration of attempts when a task stalls.
+    Use the Develop template in `references/output-templates.md`, translated into the user's language and filled with concrete content. Keep it to the lines that template defines, and lead with `blocked` and the failing check rather than a narration of attempts when a task stalls.
 
 Develop ends when every planned task is implemented and its verification goal passes, the diff holds nothing outside the approved plan, and the acceptance criteria agreed in `Clarify` hold on the whole change — not only task by task.
 
@@ -154,24 +98,6 @@ Review the finished change against the original goal, not against the code's own
 
 6. **Get explicit user confirmation.** Present the summary below and wait. Silence, partial agreement, or no objection is not confirmation. If the user requests changes, fix the must-fix items, re-run steps 3 and 4 (or re-run only the affected angles when the fix is small and the diff is unchanged elsewhere), and present the full summary again rather than only the delta.
 
-    Use this template, translated into the user's language and filled with concrete content:
-
-    ```markdown
-    **Review**
-
-    - Goal: <the outcome agreed in Clarify, one line>
-    - Changed: <files and symbols; the shape of the change in a sentence>
-    - Acceptance criteria: <criterion → evidence it holds, one line each>
-    - Checks: <command → result, for the full verification set>
-    - Review angles: <angles reviewed, and any angle or reviewer that failed or was skipped>
-    - Must fix: <defect, gap, and the criterion it breaks; or "none">
-    - Should fix: <improvement with its reason; or "none">
-    - Not doing: <out-of-scope findings and follow-ups; or "none">
-    - Residual risk: <what remains unverified or uncertain, and why acceptable; or "none">
-
-    Confirm to accept this change, or tell me what to fix.
-    ```
-
-    Keep every line concrete and short, and keep reviewer wording out of it — reconcile their language into your own. "Tests pass" alone is not evidence for an acceptance criterion; name the test or observation.
+    Use the Review template in `references/output-templates.md`, translated into the user's language and filled with concrete content. Keep every line concrete and short, and keep reviewer wording out of it — reconcile their language into your own. "Tests pass" alone is not evidence for an acceptance criterion; name the test or observation.
 
 Review ends when the diff is understood end to end, every acceptance criterion has named evidence or a stated gap, the full verification set has been run with results reported, every review angle is either reconciled or declared a coverage gap, and the user has explicitly confirmed the result — which is the gate to continuing development work, whether that means the next task queue, the next iteration, or closing the change.
