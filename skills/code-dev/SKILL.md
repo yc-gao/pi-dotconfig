@@ -6,98 +6,74 @@ description: >
 
 # Code Dev
 
-Turns a development request into a reviewed change across four stages:
+A development request moves through four stages, each ending in a gate. The next stage starts only after the gate passes.
 
-| Stage | Delivers |
-|-------|----------|
-| 1. Clarify | One agreed statement of goal, scope, constraints, and acceptance criteria |
-| 2. Plan | An ordered set of small tasks, each with a verification goal and an implementation design |
-| 3. Develop | The working change, delivered task by task |
-| 4. Review | One consolidated verdict on the whole change against the original goal |
+| Stage | Delivers | Gate |
+|-------|----------|------|
+| 1. Clarify | One agreed statement of goal, scope, constraints, and acceptance criteria | the user confirms that understanding |
+| 2. Plan | An ordered set of small tasks, each with a verification goal and an implementation design | the user approves the plan |
+| 3. Develop | The working change, delivered and verified task by task | each task's verification goal passes |
+| 4. Review | One consolidated verdict on the whole change against the original goal | the user signs off |
 
-Each stage ends with the user's explicit confirmation of its result, and the next stage starts only after that confirmation. What comes out is a change that matches what was agreed, is verified against stated criteria, distinguishes necessary fixes from optional improvements, and has been examined from several independent angles before it is accepted.
-
-Each stage writes its output in a fixed shape. The four templates live in `references/output-templates.md`; load it before writing the first gate message of a session.
+The result is a change that matches what was agreed, is verified against stated criteria, separates necessary fixes from optional improvements, and has been examined from several independent angles before acceptance.
 
 ## Workflow
 
+Two rules hold across every stage:
+
+- **Gates are explicit confirmations.** Silence, partial agreement, "looks reasonable", and no objection are not confirmation. A user correction sends you back to the affected work, not forward: revise it, recheck whatever depended on it (ordering, verification goals, other tasks, the review), and present the full summary again rather than only the delta.
+- **Output has a fixed shape.** Each gate message and each per-task report uses its template from `references/output-templates.md`; load that file before writing the first gate message of a session. In every template: translate into the user's language, keep the structure and line order, fill every line with concrete content (real files, real commands, real results), write "none" instead of dropping a line, and use only the lines the template defines.
+
+Each stage below is that gate in order: Enter says what must be true to begin, Exit says what must be true to pass, and the steps say how to get from one to the other.
+
 ### 1. Clarify
 
-Before changing code, establish an outcome that can be implemented and verified.
+Enter: a development request. Exit: an outcome that can be implemented and verified, confirmed by the user.
 
-1. **Use context before asking.** Draw the answer from the request, the conversation, the code, errors, and repo guidance first — and from the code or tests whenever they are more reliable than the user. Do not ask for information already given or discoverable, and do not ask the user to settle details that repo conventions or ordinary judgment decide. When an unknown is low-impact and a safe reversible default exists, state the assumption and continue. Never invent requirements, and never make a consequential choice silently.
-2. **Ask only what changes the work.** Ask when different answers would change the implementation, scope, or validation. Keep questions concrete, brief, and in the user's language; offer a few meaningful options with a recommended default. Use `ask_user`, grouping related questions into one form and keeping unrelated decisions apart.
-3. **Classify the request.** Name the task type — feature, bug, refactor, performance, explanation, or other — and focus on the uncertainties that type carries:
-   - Feature: user-visible behavior, key cases, out of scope.
-   - Bug: expected vs actual, a reproduction, environment and errors.
-   - Refactor or performance: behavior that must stay equivalent, how success is measured.
-4. **Confirm the shared understanding.** End clarification with one consolidated statement of what you understand: task type and goal, scope including what is out of scope, constraints and assumptions, acceptance criteria and how they will be verified, and the intended next step. Wait for explicit confirmation before going further; silence, partial agreement, or an implicit cue is not confirmation. If the user corrects you, revise, return to the relevant step above, and present the full summary again.
+1. **Use context before asking.** Take the answer from the request, the conversation, the code, errors, and repo guidance first — and from the code or tests whenever they are more reliable than the user. Do not ask for what is already given or discoverable, and do not hand the user decisions that repo conventions or ordinary judgment settle. When an unknown is low-impact and a safe reversible default exists, state the assumption and continue. Never invent requirements, and never make a consequential choice silently.
+2. **Ask only what changes the work, and read it as its type.** Ask when different answers would change implementation, scope, or validation — concretely, briefly, in the user's language, with a few meaningful options and a recommended default, grouped by related decision via `ask_user`. Name the task type and probe the uncertainties it carries:
+   - Feature — user-visible behavior, key cases, out of scope.
+   - Bug — expected vs actual, a reproduction, environment and errors.
+   - Refactor or performance — behavior that must stay equivalent, how success is measured.
+3. **Confirm the shared understanding.** Close with one consolidated statement: task type and goal, scope and out-of-scope, constraints and assumptions, acceptance criteria and how each will be verified, and the next step. Wait for explicit confirmation.
 
-    Use the Clarify template in `references/output-templates.md`, translated into the user's language and filled with concrete content rather than restated questions. Keep every line short and concrete, and write "none" instead of dropping a line, since an empty section is itself an assumption the user cannot see.
-
-Clarification ends when the task has an actionable outcome, a way to verify it, and the user's explicit confirmation of that understanding. If the request is already specific, skip questions but still present the full summary and wait.
+When the request is already specific, skip questions but still present the full summary and wait.
 
 ### 2. Plan
 
-Turn the confirmed outcome into small, independently verifiable tasks, then design each task's implementation before writing code. Divide and conquer: each task must be small enough to review and verify on its own, and its verification goal must be observable without later tasks existing.
+Enter: a confirmed outcome. Exit: every in-scope task has a verification goal, a design, and the user's approval of the plan as a whole, plus a `todo` list that mirrors it.
 
-1. **Decompose into tasks.** Split the confirmed scope along real seams — layers, modules, files, data flow, or dependency order — not by arbitrary size targets. Each task must be:
-   - **Single-purpose** — one reason to change, one thing to verify.
-   - **Independently verifiable** — it has a check (test, command, reproduction, or diff inspection) that passes or fails on its own.
-   - **Ordered** — its dependencies and the tasks it unblocks are explicit, including which tasks can proceed in parallel.
-   - **Bounded** — its files, APIs, and surface area are named, so scope creep is visible.
-
-   Split any task that a reviewer cannot hold in their head, or whose verification depends on an unrelated change landing first.
-
-2. **State a verification goal per task.** Write the check before the design detail: the command, test, or observation that proves the task is done, and the expected result. If a task has no cheap check, say how it will be verified instead and why. A task without a verification goal is not ready to plan.
-
-3. **Design each task's approach.** For every task, record the design at the level a reviewer needs to judge it: which files and symbols change, the shape of the change (new module, signature change, migration, deleted code path), alternatives considered and why they were rejected, risks, and rollback. Keep designs consistent with task order — a design that only works if a later task changes the contract must say so.
-
-4. **Present the plan for approval.** Present all tasks and designs in one consolidated message, then wait for explicit approval. Silence, partial agreement, or "looks reasonable" without a clear go-ahead is not approval. If the user changes scope, task boundaries, or an approach, revise the affected tasks, re-check ordering and verification goals, and present the full plan again.
-
-    Use the Plan template in `references/output-templates.md`, translated into the user's language and filled with concrete content. Keep the table and per-task blocks short, and name real files and real commands; "add tests" and "refactor as needed" are neither a task nor a verification goal.
-
-Planning ends when every in-scope task has a verification goal and an approved design, and the user has explicitly approved the plan. Then implement one task at a time, in order, verifying each before starting the next.
+1. **Decompose along real seams.** Split the confirmed scope by layers, modules, files, data flow, or dependency order — not by size targets. Every task must be single-purpose (one reason to change, one thing to verify), independently verifiable (a check that passes or fails on its own, without later tasks existing), ordered (dependencies and unblocked tasks explicit, including which run in parallel), and bounded (its files, APIs, and surface area named, so scope creep is visible). Split any task a reviewer cannot hold in their head, or whose verification depends on an unrelated change landing first.
+2. **State the verification goal first.** Before design detail, write the command, test, or observation that proves the task done, plus its expected result. If a task has no cheap check, say how it will be verified instead and why. A task without a verification goal is not ready to plan.
+3. **Design the approach.** Record what a reviewer needs to judge it: which files and symbols change, the shape of the change (new module, signature change, migration, deleted code path), alternatives considered and why rejected, risks, and rollback. Disclose any design that only works once a later task changes the contract.
+4. **Present the whole plan and wait.** Name real files and real commands — "add tests" and "refactor as needed" are neither a task nor a verification goal. On approval, load the plan into the `todo` tool: `clear` any earlier list, then `add` one item per task in dependency order, each reading `<task title> — verify: <verification goal>`. The list, not memory or the message history, is the record of what Develop still owes.
 
 ### 3. Develop
 
-Implement the approved plan one task at a time. The plan is the contract: code follows the approved design, and each task's verification goal is that task's exit condition.
+Enter: an approved plan and its `todo` list. Exit: every item implemented, verified, and ticked; the diff holding nothing outside the plan; the acceptance criteria holding on the whole change, not only item by item.
 
-1. **Prepare before editing.** Re-read the task's design, open the files and symbols it names, and confirm the code still matches what the plan assumed — signatures, callers, existing tests. Note the baseline first (run the task's verification command, or the existing suite) so a later pass or fail is attributable to your change.
+Work the list, not the narrative: take the first unticked item, finish it, tick it, read the list again. If the list disagrees with your sense of progress, the list is right.
 
-2. **Change minimally inside the task's bound.** Touch only the files, symbols, and APIs the task names, and follow the repository's existing conventions over personal preference: naming, error handling, module layout, test style, and how similar code already does it. No drive-by refactors, renames, reformatting sweeps, dependency bumps, or unrelated bug fixes — record them as follow-ups. When you replace a code path, delete what it orphaned rather than leaving dead code behind.
-
-3. **Implement the approved design, not a variant.** Choices inside the design — helper extraction, local naming, error messages, small control flow — are yours. The design itself is not: if it cannot work as written (missing API, hidden coupling, absent test infrastructure, contradicting repo constraints), stop, state precisely what broke, offer the smallest options, and get approval before deviating. Never implement the plan's successor task to make this one pass.
-
-4. **Verify each task before starting the next.** Run the task's verification goal exactly as planned, adding the targeted test when the goal is a test. Then check for regressions with the narrowest surrounding checks — related tests, typecheck, lint, build — and read the diff to confirm it contains only intended changes. A failing check blocks progress: fix it, or report and stop. Do not make a check pass by skipping, disabling, loosening assertions, or hardcoding expected values, and do not stack the next task on unverified code.
-
-5. **Report per task and keep state visible.** Report after each task using the template below, then continue unless the user asked to review each task individually. If the outcome changes later tasks — a contract moved, a task became unnecessary, a new task is required — update the plan and confirm with the user before entering the affected tasks. If the repo is a git worktree and the user has not said otherwise, leave one commit per verified task using the repository's message convention.
-
-    Use the Develop template in `references/output-templates.md`, translated into the user's language and filled with concrete content. Keep it to the lines that template defines, and lead with `blocked` and the failing check rather than a narration of attempts when a task stalls.
-
-Develop ends when every planned task is implemented and its verification goal passes, the diff holds nothing outside the approved plan, and the acceptance criteria agreed in `Clarify` hold on the whole change — not only task by task.
+1. **Prepare.** Re-read the item's design, open the files and symbols it names, and confirm the code still matches what the plan assumed — signatures, callers, existing tests. Record the baseline (the item's verification command, or the existing suite) so a later pass or fail is attributable to your change.
+2. **Stay inside the item's bound.** Touch only the files, symbols, and APIs it names, and follow repository conventions over personal preference — naming, error handling, module layout, test style. No drive-by refactors, renames, reformatting, dependency bumps, or unrelated fixes; record them as follow-ups. Delete the code path you orphaned instead of leaving it dead.
+3. **Implement the approved design, not a variant.** Helper extraction, naming, error messages, small control flow are yours; the design is not. If it cannot work as written — missing API, hidden coupling, no test infrastructure, conflicting repo constraints — stop, state precisely what broke, offer the smallest options, and get approval before deviating. Never implement the next item to make this one pass.
+4. **Verify.** Run the item's verification goal exactly as planned, adding the targeted test when the goal is a test; then the narrowest regression checks (related tests, typecheck, lint, build) and a read of the diff for unintended changes. A failing check blocks progress: fix it, or report and stop. Never pass a check by skipping it, disabling it, loosening assertions, or hardcoding expected values — and never stack the next item on unverified code.
+5. **Record and continue.** Tick the item, report with the Develop template, and continue unless the user asked to review items individually. If an outcome shifts later items — a contract moved, one became unnecessary, a new one appeared — update the plan, confirm, and rewrite the `todo` list to match (`clear`, then re-`add` in the new order); never leave a stale item for an item the plan dropped. In a git worktree, and unless the user said otherwise, leave one commit per verified item using the repository's message convention.
 
 ### 4. Review
 
-Review the finished change against the original goal, not against the code's own story. The main agent stays the only writer: it does a first pass itself, fans the deep review out to parallel read-only reviewers via `subagent`, reconciles their findings against the code, and presents the result for the user's confirmation.
+Enter: a developed change with every `todo` item ticked. Exit: every angle audited, every criterion backed by named evidence or a stated gap, the full verification set run and reported, all findings reconciled, and the user's explicit sign-off.
 
-1. **Review the diff as a reviewer, not an author.** Read the complete change top to bottom before delegating — every hunk, including ones that felt trivial while writing. Check for: unintended edits, leftover debug output and commented code, dead or unreachable paths, and unrelated changes smuggled in. You need this context to judge what the reviewers send back.
-2. **Check goal, not just tests.** Map each acceptance criterion from `Clarify` to the observable evidence that satisfies it. Passing tests that do not address a criterion is a gap, not a pass. Conversely, call out criteria still unverified and why.
-3. **Re-run the whole verification set at once.** After the final task, run the full planned checks plus the project's broader gate (full test suite, typecheck, lint, build) rather than trusting per-task runs, since later tasks can invalidate earlier ones. Record the commands and their results verbatim — the reviewers and the user both need them.
-4. **Fan the deep review out to parallel reviewers.** Launch independent read-only reviewers in one `subagent` parallel workflow, one per angle, each told to work from the goal, the accepted criteria, the approved plan, and the diff plus recorded check results. Cover at least these angles, dropping one only when it cannot apply and saying so:
-   - **Correctness** — logic errors, edge cases, empty or partial input, boundaries, error paths, concurrency and ordering, missing null checks, resource release.
-   - **Criteria and coverage** — each acceptance criterion against real evidence, and tests that would have caught the defects this change was supposed to fix.
+The main agent does not do its own review pass: no reading the diff, no running the checks. It hands the change to the reviewers and judges what comes back. The one thing it keeps is the write — reviewers audit, the main agent fixes.
+
+1. **Fan the audit out immediately.** In one `subagent` parallel workflow, launch independent read-only reviewers, one per angle, each working from the goal, the accepted criteria from `Clarify`, the approved plan, and the change. Cover these angles, dropping one only when it cannot apply and saying so:
+   - **Correctness** — logic errors, edge cases, empty or partial input, boundaries, error paths, concurrency and ordering, null checks, resource release.
+   - **Criteria and coverage** — each acceptance criterion against real evidence, and missing tests that would have caught the defects this change was meant to fix.
    - **Compatibility and conventions** — public APIs, persisted formats, callers elsewhere in the repo, and whether the code follows how the surrounding code already does it.
    - **Security and data handling** — untrusted input, injection, secrets and logging, authorization, unsafe defaults.
-   - **Performance and operations** — complexity, repeated work, blocking calls, memory growth, failure behavior and observability in production.
-   - **Diff hygiene** — scope creep, dead code, debug residue, naming and structure, duplication, stale comments and docs.
+   - **Performance and operations** — complexity, repeated work, blocking calls, memory growth, failure behavior and observability.
+   - **Diff hygiene** — unintended edits, scope creep, dead code, debug residue, commented-out code, naming and structure, duplication, stale comments and docs.
 
-   Give every reviewer the same read-only mandate: do not edit, create, or delete files; do not commit or switch branches; do not run destructive or slow commands; report findings as `file:line` with the concrete evidence and a severity of must-fix, should-fix, or noted; write "no findings" explicitly rather than leaving a section empty. Reviewers write nothing — the main agent applies every fix, so parallel reviewers can never race on the working tree.
-
-5. **Reconcile before reporting.** Deduplicate the same issue found by several angles, surface contradictions instead of picking a side silently, and verify every claimed finding against the code yourself — reviewers both miss and invent things, so nothing reaches the user unconfirmed. Then classify: must-fix (breaks a criterion, a regression, a real defect), should-fix (clarity, naming, duplication, missing coverage), noted-but-not-doing (out of scope, tracked as follow-ups). State which criterion each must-fix affects. If a reviewer failed or an angle went uncovered, say so as a coverage gap rather than implying it was cleared, and never present a risk as cleared because tests pass or because no reviewer flagged it.
-
-6. **Get explicit user confirmation.** Present the summary below and wait. Silence, partial agreement, or no objection is not confirmation. If the user requests changes, fix the must-fix items, re-run steps 3 and 4 (or re-run only the affected angles when the fix is small and the diff is unchanged elsewhere), and present the full summary again rather than only the delta.
-
-    Use the Review template in `references/output-templates.md`, translated into the user's language and filled with concrete content. Keep every line concrete and short, and keep reviewer wording out of it — reconcile their language into your own. "Tests pass" alone is not evidence for an acceptance criterion; name the test or observation.
-
-Review ends when the diff is understood end to end, every acceptance criterion has named evidence or a stated gap, the full verification set has been run with results reported, every review angle is either reconciled or declared a coverage gap, and the user has explicitly confirmed the result — which is the gate to continuing development work, whether that means the next task queue, the next iteration, or closing the change.
+   Every reviewer gets the same mandate: read-only, no editing, creating, deleting, committing, or branch switching, and no destructive commands; findings as `file:line` with concrete evidence and a severity of must-fix, should-fix, or noted; "no findings" written explicitly rather than left empty. At least the criteria reviewer also runs the full verification set — the planned checks plus the project's broader gate (full suite, typecheck, lint, build) — since later items can invalidate earlier runs, and reports the commands and results verbatim. Reviewers write nothing, so parallel reviewers cannot race on the working tree.
+2. **Reconcile into your own verdict.** Deduplicate what several angles found, surface contradictions instead of silently picking a side, and spot-check each claimed finding against the code before it reaches the user — reviewers both miss and invent. Classify as must-fix (breaks a criterion, a regression, a real defect), should-fix (clarity, naming, duplication, missing coverage), or noted-but-not-doing (out of scope, tracked as follow-ups), naming the criterion each must-fix affects. A failed reviewer or uncovered angle is a coverage gap, never cleared; passing tests or a silent reviewer never clear a risk.
+3. **Present and get sign-off.** Keep reviewer wording out of the summary and name the test or observation behind each criterion. If the user asks for changes, fix the must-fix items, re-run the audit (or only the affected angles when the fix is small and the rest of the change is untouched), and present the full summary again. Sign-off is the gate to further work: the next task queue, the next iteration, or closing the change.
