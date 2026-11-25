@@ -12,8 +12,8 @@ Download media from 1,800+ sites, including whole playlists and channels, live c
 
 ## Workflow
 
-1. **Classify.** Decide what to deliver (video, audio, subtitles, live chat, live stream, collection) and the constraints named (quality or codec, audio format, subtitle languages, output location). Ask only when an unclear choice changes the result — for example a URL that could mean either the playlist or a single entry.
-2. **Check prerequisites.** `which yt-dlp && which ffmpeg || exit 1`. If either is missing, stop before inspecting or downloading anything.
+1. **Check prerequisites.** `which yt-dlp && which ffmpeg || exit 1`. If either is missing, stop before inspecting or downloading anything.
+2. **Classify.** Decide what to deliver (video, audio, subtitles, live chat, live stream, collection) and the constraints named (quality or codec, audio format, subtitle languages, output location). Ask only when an unclear choice changes the result — for example a URL that could mean either the playlist or a single entry.
 3. **Inspect only when the answer depends on it.** For a named quality or format, or unclear options, look up the source's real capabilities first. Prefer stating a preference over pinning an option ID, keep the default when nothing was requested, and bound a large collection before extracting it.
 4. **Build and run a single command** from **Common Operations**, applying **Best Practices by Use Case** where relevant. Keep the requested output path and options, download a full playlist or channel only when asked, and treat cookie data as a secret.
 5. **Verify and report.** Confirm the expected files exist and are complete; leftover `.part` files mean an incomplete download. Report the output location and any error the tool printed, and never claim success for a failed or partial run. If a requested choice is unavailable, report the alternatives instead of silently substituting one.
@@ -42,8 +42,6 @@ The output filename is based on the video's title in every case.
 yt-dlp -o "%(title)s.%(ext)s" "URL"                                    # default selection
 yt-dlp -o "%(title)s.%(ext)s" -f "bv*+ba/b" "URL"                      # best video + best audio
 yt-dlp -o "%(title)s.%(ext)s" -S "res:1080,codec:avc,ext:mp4" "URL"    # ranked preference
-yt-dlp -o "%(title)s.%(ext)s" \
-  --write-auto-subs --sub-langs all --embed-subs "URL"                 # with subtitles
 ```
 
 **Options**
@@ -51,9 +49,6 @@ yt-dlp -o "%(title)s.%(ext)s" \
 - `-o, --output [TYPES:]TEMPLATE` — filename template filled from metadata (`%(title)s`, `%(id)s`, `%(ext)s`, `%(playlist)s`, `%(upload_date)s`); keep `%(ext)s` last so the real extension wins. Missing directories are created.
 - `-f, --format FORMAT` — selection expression, not a single ID: `bv*` best video (may include audio), `ba` best audio, `+` merge with FFmpeg, `/` fallback, `b` best combined stream.
 - `-S, --format-sort SORTORDER` — ordered sort keys, optionally capped (`res:1080`, `codec:avc`, `ext:mp4`). Sorting is a preference, so a file is still produced when the top choice is absent.
-- `--write-auto-subs` — machine-generated tracks only; `--write-subs` adds creator tracks.
-- `--sub-langs LANGS` — `all`, a comma-separated list, or patterns such as `zh.*,en.*`.
-- `--embed-subs` — mux subtitles into the media file; mp4, webm, and mkv only, and requires FFmpeg.
 
 ### Download subtitles
 
@@ -68,7 +63,9 @@ yt-dlp -o "%(title)s.%(ext)s" \
 **Options**
 
 - `--list-subs` — print creator and automatic tracks with their codes, formats, and names, then exit; a preview only. Re-run it after changing `--sub-langs` or the site options if the output looks incomplete.
-- `--write-subs` — save creator-provided tracks; add `--write-auto-subs` for machine-generated ones.
+- `--write-subs` — save creator-provided tracks.
+- `--write-auto-subs` — machine-generated tracks only.
+- `--sub-langs LANGS` — `all`, a comma-separated list, or patterns such as `zh.*,en.*`.
 - `--skip-download` — write only auxiliary files (subtitles, thumbnails, metadata), no media.
 
 ### Extract audio
