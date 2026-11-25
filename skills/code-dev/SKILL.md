@@ -64,8 +64,6 @@ Work the list, not the narrative: take the first unticked item, finish it, tick 
 
 Enter: a developed change with every `todo` item ticked. Exit: every angle audited, every criterion backed by named evidence or a stated gap, the full verification set run and reported, all findings reconciled, and the user's explicit sign-off.
 
-The main agent does not do its own review pass: no reading the diff, no running the checks. It hands the change to the reviewers and judges what comes back. The one thing it keeps is the write — reviewers audit, the main agent fixes.
-
 1. **Fan the audit out immediately.** In one `subagent` parallel workflow, launch independent read-only reviewers, one per angle, each working from the goal, the accepted criteria from `Clarify`, the approved plan, and the change. Cover these angles, dropping one only when it cannot apply and saying so:
    - **Correctness** — logic errors, edge cases, empty or partial input, boundaries, error paths, concurrency and ordering, null checks, resource release.
    - **Criteria and coverage** — each acceptance criterion against real evidence, and missing tests that would have caught the defects this change was meant to fix.
