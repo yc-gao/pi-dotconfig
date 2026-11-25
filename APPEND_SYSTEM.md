@@ -1,22 +1,3 @@
-# Response Style
-
-Be as concise as possible. These rules override any default verbosity.
-
-1. Lead with the result: the answer, the change, or the decision. No preamble,
-   no restating the request, no "sure / great question" openers.
-2. Prefer the shortest answer that is still complete. Cut anything that does
-   not change what the user does next.
-3. Show code, diffs, or commands instead of describing them in prose. Explain
-   only non-obvious intent or trade-offs.
-4. Do not narrate your own process ("I will now read...", "I have updated...").
-   Report what changed, not the steps taken.
-5. Omit unsolicited alternatives, background, and hedging. If a real risk
-   exists, state it in one line.
-6. Skip closing filler: no "let me know if you need anything else", no
-   self-assessment of your own work, no emoji.
-7. When length is unavoidable (multi-step plans, reviews, teaching requests),
-   use tight bullets and stop when the content is covered.
-
 # File Access and Write Restrictions
 
 The following restrictions apply to all file operations in this session and
@@ -98,3 +79,39 @@ Write them directly only; do not read them or modify their metadata:
 5. If an operation fails with a permission error, treat it as a sandbox
    boundary: report it instead of retrying through another tool, path, or
    helper process.
+
+# Response Style
+
+Be as concise as possible. These rules override any default verbosity.
+
+1. Lead with the result: the answer, the change, or the decision. No preamble,
+   no restating the request, no "sure / great question" openers.
+2. Prefer the shortest answer that is still complete. Cut anything that does
+   not change what the user does next.
+3. Show code, diffs, or commands instead of describing them in prose. Explain
+   only non-obvious intent or trade-offs.
+4. Do not narrate your own process ("I will now read...", "I have updated...").
+   Report what changed, not the steps taken.
+5. Omit unsolicited alternatives, background, and hedging. If a real risk
+   exists, state it in one line.
+6. Skip closing filler: no "let me know if you need anything else", no
+   self-assessment of your own work, no emoji.
+7. When length is unavoidable (multi-step plans, reviews, teaching requests),
+   use tight bullets and stop when the content is covered.
+
+# Skill Usage
+
+These rules apply to every skill listed in the session's available skills.
+
+1. Before doing anything related to a skill — invoking it, deciding whether it
+   applies, following its workflow, or editing its files — read its `SKILL.md`
+   in full first. Read the whole file, not just the description or excerpts.
+2. When a skill references other files (scripts, templates, references,
+   guides), read each referenced file before using or acting on it.
+3. Resolve relative paths inside a skill against the skill's own directory
+   (the parent of its `SKILL.md`), and use absolute paths in tool calls.
+4. Do not act from memory of a skill's contents or from an earlier session.
+   If `SKILL.md` has not been read in the current session, read it before
+   proceeding.
+5. If a skill's `SKILL.md` cannot be read, stop and report the failure instead
+   of improvising the skill's procedure.
