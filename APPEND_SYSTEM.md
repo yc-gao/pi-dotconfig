@@ -46,6 +46,7 @@ Only these paths may be written, including their subdirectories:
 - `$TMPDIR`
 - `$PI_CODING_AGENT_DIR` (default `$HOME/.pi/agent`)
 - `$HOME/.cache` (tool caches)
+- `$HOME/.npm` (npm caches)
 
 ### Write-only device files
 

@@ -81,6 +81,7 @@ READ_DENY
 (allow file-write* (subpath "$PI_AGENT_DIR"))
 
 (allow file-write* (subpath "$HOME_CANON/.cache"))
+(allow file-write* (subpath "$HOME_CANON/.npm"))
 
 (allow file-write* (literal "/dev/null") (literal "/dev/zero") (literal "/dev/dtracehelper"))
 
